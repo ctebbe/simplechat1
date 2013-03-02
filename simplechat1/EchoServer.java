@@ -49,6 +49,9 @@ public class EchoServer extends AbstractServer
   public void handleMessageFromClient
     (Object msg, ConnectionToClient client)
   {
+	if(msg == null) { // this will represent a test for now
+		return;
+	}
     System.out.println("Message received: " + msg + " from " + client);
     this.sendToAllClients(msg);
   }

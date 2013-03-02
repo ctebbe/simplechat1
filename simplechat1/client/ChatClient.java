@@ -26,7 +26,6 @@ public class ChatClient extends AbstractClient
    * the display method in the client.
    */
   ChatIF clientUI; 
-
   
   //Constructors ****************************************************
   
@@ -66,6 +65,7 @@ public class ChatClient extends AbstractClient
    */
   public void handleMessageFromClientUI(String message)
   {
+	
     try
     {
       sendToServer(message);
@@ -78,6 +78,17 @@ public class ChatClient extends AbstractClient
     }
   }
   
+  /**
+   * (non-Javadoc)
+   * @see ocsf.client.AbstractClient#connectionClosed()
+   * closes the client when connection to the server is lost
+   */
+  public void connectionClosed() {
+	  clientUI.display
+      ("Lost connection to Server.  Terminating client.");
+	  quit();
+  }
+
   /**
    * This method terminates the client.
    */
