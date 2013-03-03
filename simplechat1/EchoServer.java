@@ -51,9 +51,25 @@ public class EchoServer extends AbstractServer
   {
 	if(msg == null) { // this will represent a test for now
 		return;
+	} else if( (client.toString()).equals("server") ) {
+		
 	}
     System.out.println("Message received: " + msg + " from " + client);
     this.sendToAllClients(msg);
+  }
+  
+  /**
+   * called when a client connects
+   */
+  protected void clientConnected(ConnectionToClient client) {
+	System.out.println("Client connected.");
+  }
+  
+  /**
+   * called when a client disconnected
+   */
+  synchronized protected void clientDisconnected(ConnectionToClient client) {
+	  System.out.println("Client disconnected.");
   }
     
   /**
@@ -75,6 +91,8 @@ public class EchoServer extends AbstractServer
     System.out.println
       ("Server has stopped listening for connections.");
   }
+  
+  
   
   //Class methods ***************************************************
   
@@ -99,6 +117,7 @@ public class EchoServer extends AbstractServer
     }
 	
     EchoServer sv = new EchoServer(port);
+    ServerConsole server = new ServerConsole(sv);
     
     try 
     {
@@ -108,6 +127,7 @@ public class EchoServer extends AbstractServer
     {
       System.out.println("ERROR - Could not listen for clients!");
     }
+    server.accept();
   }
 }
 //End of EchoServer class
