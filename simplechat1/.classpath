@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<classpath>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/OCSF_Framework"/>
-	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry excluding="OCSF_Framework/" kind="src" path=""/>
-	<classpathentry kind="src" path="OCSF_Framework"/>
-	<classpathentry kind="output" path=""/>
-</classpath>
