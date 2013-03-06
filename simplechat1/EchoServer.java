@@ -3,6 +3,7 @@
 // license found at www.lloseng.com 
 
 import java.io.*;
+
 import ocsf.server.*;
 
 /**
@@ -46,21 +47,44 @@ public class EchoServer extends AbstractServer
    * @param msg The message received from the client.
    * @param client The connection from which the message originated.
    */
-  public void handleMessageFromClient
-    (Object msg, ConnectionToClient client)
-  {
-	if(msg == null) { // this will represent a test for now
-		return;
-	} else if( (client.toString()).equals("server") ) { // a message from the server
-		
-	} else if( !(client.toString()).equals("server") ) { // a message from the client
-		
-	}
-    System.out.println("Message received: " + msg + " from " + client);
-    this.sendToAllClients(msg);
+  public void handleMessageFromClient(Object msg, ConnectionToClient client) {
+	  
+	  String loginid = (String) client.getInfo("loginid");
+	  if( (((msg.toString()).trim()).startsWith("#")) ) { // handle command
+		  handleClientCommand(msg.toString().trim(), client);
+	  } else { // not a command
+		  if(loginid != null) {
+			  sendToAllClients(loginid+"> "+msg);
+		  } else {
+			  System.out.println("Client sending message but not logged in.");
+		  }
+	  }
   }
   
-  /**
+  private void handleClientCommand(String command, ConnectionToClient client) {
+	  
+	// pull argument from command if there is any
+	String arg = null;
+	int argIndex = command.indexOf(' ');
+	if(argIndex != -1) {
+		arg = (command.substring(argIndex)).trim();
+		command = (command.substring(command.indexOf('#'), argIndex)).trim();
+	}
+	
+	try{
+		if( (client.getInfo("loginid") == null) && !(command.equals("#login")) ) { // check user has a loginid and if doesnt then make sure its calling #login
+			client.close();
+		} else if(command.equals("#login")) { // start adding commands here
+			client.setInfo("loginid", arg);
+		} else {
+			
+		}
+	} catch(Exception e) {}
+	
+  }
+
+
+/**
    * called when a client connects
    */
   protected void clientConnected(ConnectionToClient client) {
