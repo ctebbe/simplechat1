@@ -51,7 +51,9 @@ public class EchoServer extends AbstractServer
   {
 	if(msg == null) { // this will represent a test for now
 		return;
-	} else if( (client.toString()).equals("server") ) {
+	} else if( (client.toString()).equals("server") ) { // a message from the server
+		
+	} else if( !(client.toString()).equals("server") ) { // a message from the client
 		
 	}
     System.out.println("Message received: " + msg + " from " + client);

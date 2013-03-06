@@ -100,12 +100,8 @@ public class ClientConsole implements ChatIF {
 		try {
 			loginid = args[0];
 		} catch (ArrayIndexOutOfBoundsException e) {
-			/*
-			 * un comment this when implemented
-			 
 			System.out.println("Must provide loginid to start session");
 			System.exit(0);
-			*/
 		}
 
 		try {

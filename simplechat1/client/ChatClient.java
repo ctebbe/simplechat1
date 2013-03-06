@@ -26,7 +26,7 @@ public class ChatClient extends AbstractClient
    * the display method in the client.
    */
   ChatIF clientUI; 
-  private boolean quitOnClose; // use this to logoff and not terminate the client
+  private boolean quitOnClose; // use this to "logoff" and not terminate the client
   private String loginid;
   
   //Constructors ****************************************************
@@ -45,7 +45,7 @@ public class ChatClient extends AbstractClient
     this.clientUI = clientUI;
     this.quitOnClose = true;
     this.loginid = null;
-    openConnection();
+    //openConnection();
   }
   
   public ChatClient(String host, int port, ChatIF clientUI, String loginid) throws IOException 
@@ -54,13 +54,25 @@ public class ChatClient extends AbstractClient
     this.clientUI = clientUI;
     this.quitOnClose = true;
     this.loginid = loginid;
-    openConnection();
+    login();
+    //openConnection();
   }
 
   
   //Instance methods ************************************************
     
-  /**
+  private void login() {
+	try {
+		if(isConnected()) {
+			System.out.println("Currently connected to the server. #logoff and try again.");
+		} else {
+			openConnection();
+			sendToServer("#login "+this.loginid);
+		}
+	} catch (IOException e) {}
+}
+
+/**
    * This method handles all data that comes in from the server.
    *
    * @param msg The message from the server.
@@ -102,46 +114,53 @@ public class ChatClient extends AbstractClient
 	}
 	
 	// parse command
-	// might want to override all these checks in the future to clean this up..
-	if(command.equals("#quit")) {
-		quit();
-	} else if(command.equals("#logoff")) {
-		try {
-			this.setQuitOnClose(false); // disable client from quitting upon losing connection to server
-			closeConnection();
-		} catch (IOException e) {}
-	} else if(command.equals("#sethost")) {
-		if(isConnected()) {
-			System.out.println("Must disconnect from server. Use #logoff and try again.");
-		} else if(arg == null) {
-			System.out.println("No host argument. Use: #sethost <host>");
+	try {
+		if(command.equals("#quit")) {
+			quit();
+		} else if(command.equals("#logoff")) {
+			logoff();
+		} else if(command.equals("#sethost")) {
+			changeHost(arg);
+		} else if(command.equals("#setport")) {
+			setPort(arg);
+		} else if(command.equals("#login")) {
+			login();
+		} else if(command.equals("#gethost")) {
+			System.out.println("Current host: "+getHost());
+		} else if(command.equals("#getport")) {
+			System.out.println("Current port: "+getPort());
 		} else {
-			setHost(arg);
+			System.out.println("Illegal command. Use: #command <arg>");
 		}
-	} else if(command.equals("#setport")) {
-		if(isConnected()) {
-			System.out.println("Must disconnect from server. Use #logoff and try again.");
-		} else if(arg == null) {
-			System.out.println("No port argument. Use: #setport <port>");
-		} else {
-			setPort(Integer.parseInt(arg));
-		}
-	} else if(command.equals("#login")) {
-		if(isConnected()) {
-			System.out.println("Already connected to the server.");
-		} else {
-			try {
-				openConnection();
-			} catch (IOException e) {}
-		}
-	} else if(command.equals("#gethost")) {
-		System.out.println("Current host: "+getHost());
-	} else if(command.equals("#getport")) {
-		System.out.println("Current port: "+getPort());
-	} else {
-		System.out.println("Illegal command. Use: #command <arg>");
+	} catch(Exception e) {
+		
 	}
   }
+
+private void setPort(String arg) {
+	if(isConnected()) {
+		System.out.println("Must disconnect from server. Use #logoff and try again.");
+	} else if(arg == null) {
+		System.out.println("No port argument. Use: #setport <port>");
+	} else {
+		setPort(Integer.parseInt(arg));
+	}
+}
+
+private void logoff() throws IOException {
+	this.setQuitOnClose(false); // disable client from quitting upon losing connection to server
+	closeConnection();
+}
+
+private void changeHost(String arg) {
+	if(isConnected()) {
+		System.out.println("Must disconnect from server. Use #logoff and try again.");
+	} else if(arg == null) {
+		System.out.println("No host argument. Use: #sethost <host>");
+	} else {
+		setHost(arg);
+	}
+}
 
 /**
    * (non-Javadoc)
