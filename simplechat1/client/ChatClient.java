@@ -7,6 +7,8 @@ package client;
 import ocsf.client.*;
 import common.*;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class overrides some of the methods defined in the abstract
@@ -28,6 +30,7 @@ public class ChatClient extends AbstractClient
   ChatIF clientUI; 
   private boolean quitOnClose; // use this to "logoff" and not terminate the client
   private String loginid;
+  private List<String> blockList;
   
   //Constructors ****************************************************
   
@@ -39,21 +42,13 @@ public class ChatClient extends AbstractClient
    * @param clientUI The interface type variable.
    */
   
-  public ChatClient(String host, int port, ChatIF clientUI) throws IOException 
-  {
-    super(host, port); //Call the superclass constructor
-    this.clientUI = clientUI;
-    this.quitOnClose = true;
-    this.loginid = null;
-    //openConnection();
-  }
-  
   public ChatClient(String host, int port, ChatIF clientUI, String loginid) throws IOException 
   {
     super(host, port); //Call the superclass constructor
     this.clientUI = clientUI;
     this.quitOnClose = true;
     this.loginid = loginid;
+    this.blockList = new ArrayList<String>();
     login();
     //openConnection();
   }
@@ -68,6 +63,7 @@ public class ChatClient extends AbstractClient
 		} else {
 			openConnection();
 			sendToServer("#login "+this.loginid);
+			clientUI.display("Logged in as "+this.loginid);
 		}
 	} catch (IOException e) {}
 }
@@ -79,10 +75,26 @@ public class ChatClient extends AbstractClient
    */
   public void handleMessageFromServer(Object msg) 
   {
-    clientUI.display(msg.toString());
+	if(!(checkMessageFromBlockedClient(msg.toString()))) {
+		clientUI.display(msg.toString());
+	}    
   }
 
-  /**
+  private boolean checkMessageFromBlockedClient(String message) {
+	  // server format: loginid> message
+	  int loginidIndex = message.indexOf('>');
+	  String loginid = "";
+	  loginid = message.substring(loginidIndex);
+	  
+	  if(this.blockList.contains(loginid)) {
+		  System.out.println("Blocked user message");
+		  return true;
+	  } else {
+		  return false;
+	  }
+}
+
+/**
    * This method handles all data coming from the UI            
    *
    * @param message The message from the UI.    
@@ -126,9 +138,13 @@ public class ChatClient extends AbstractClient
 		} else if(command.equals("#login")) {
 			login();
 		} else if(command.equals("#gethost")) {
-			System.out.println("Current host: "+getHost());
+			clientUI.display("Current host: "+getHost());
 		} else if(command.equals("#getport")) {
-			System.out.println("Current port: "+getPort());
+			clientUI.display("Current port: "+getPort());
+		} else if(command.equals("#block")) {
+			addToBlockList(arg);
+		} else if(command.equals("#whoiblock")) {
+			displayWhoIBlock();
 		} else {
 			System.out.println("Illegal command. Use: #command <arg>");
 		}
@@ -137,11 +153,25 @@ public class ChatClient extends AbstractClient
 	}
   }
 
+private void displayWhoIBlock() {
+	String blockList = "";
+	for(String s:this.blockList) {
+		blockList += s+" ";
+	}
+	clientUI.display("Block list:"+ blockList);
+}
+
+
+private void addToBlockList(String arg) {
+	clientUI.display("Adding user to block list:"+arg);
+	this.blockList.add(arg);
+}
+
 private void setPort(String arg) {
 	if(isConnected()) {
-		System.out.println("Must disconnect from server. Use #logoff and try again.");
+		clientUI.display("Must disconnect from server. Use #logoff and try again.");
 	} else if(arg == null) {
-		System.out.println("No port argument. Use: #setport <port>");
+		clientUI.display("No port argument. Use: #setport <port>");
 	} else {
 		setPort(Integer.parseInt(arg));
 	}
@@ -154,9 +184,9 @@ private void logoff() throws IOException {
 
 private void changeHost(String arg) {
 	if(isConnected()) {
-		System.out.println("Must disconnect from server. Use #logoff and try again.");
+		clientUI.display("Must disconnect from server. Use #logoff and try again.");
 	} else if(arg == null) {
-		System.out.println("No host argument. Use: #sethost <host>");
+		clientUI.display("No host argument. Use: #sethost <host>");
 	} else {
 		setHost(arg);
 	}

@@ -54,6 +54,7 @@ public class EchoServer extends AbstractServer
 		  handleClientCommand(msg.toString().trim(), client);
 	  } else { // not a command
 		  if(loginid != null) {
+			  System.out.println("Message recieved from: "+loginid);
 			  sendToAllClients(loginid+"> "+msg);
 		  } else {
 			  System.out.println("Client sending message but not logged in.");
@@ -70,16 +71,20 @@ public class EchoServer extends AbstractServer
 		arg = (command.substring(argIndex)).trim();
 		command = (command.substring(command.indexOf('#'), argIndex)).trim();
 	}
-	
-	try{
-		if( (client.getInfo("loginid") == null) && !(command.equals("#login")) ) { // check user has a loginid and if doesnt then make sure its calling #login
-			client.close();
-		} else if(command.equals("#login")) { // start adding commands here
+	//System.out.println("command:"+command);
+	//System.out.println("arg:"+arg);
+	if( (client.getInfo("loginid") == null) ) { // check user has a loginid and if doesnt then make sure its calling #login
+		if(command.equals("#login")) {
 			client.setInfo("loginid", arg);
 		} else {
-			
+			System.out.println("Command recieved from client but not logged in.");
+			try {
+				client.close();
+			} catch (IOException e) {}
 		}
-	} catch(Exception e) {}
+	} else {
+		
+	}
 	
   }
 
