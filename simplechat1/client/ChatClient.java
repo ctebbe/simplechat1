@@ -19,6 +19,7 @@ import java.util.List;
  * @author Fran&ccedil;ois B&eacute;langer
  * @version July 2000
  */
+@SuppressWarnings("unused")
 public class ChatClient extends AbstractClient
 {
   //Instance variables **********************************************
@@ -30,7 +31,7 @@ public class ChatClient extends AbstractClient
   ChatIF clientUI; 
   private boolean quitOnClose; // use this to "logoff" and not terminate the client
   private String loginid;
-  private List<String> blockList;
+  private ArrayList<String> blockList;
   
   //Constructors ****************************************************
   
@@ -75,19 +76,19 @@ public class ChatClient extends AbstractClient
    */
   public void handleMessageFromServer(Object msg) 
   {
-	if(!(checkMessageFromBlockedClient(msg.toString()))) {
+	if( !(isMessageFromBlockedClient( (msg.toString()) )) ) {
 		clientUI.display(msg.toString());
 	}    
   }
 
-  private boolean checkMessageFromBlockedClient(String message) {
+  private boolean isMessageFromBlockedClient(String message) {
 	  // server format: loginid> message
 	  int loginidIndex = message.indexOf('>');
 	  String loginid = "";
-	  loginid = message.substring(loginidIndex);
+	  loginid = (message.substring(0, loginidIndex)).toLowerCase();
 	  
 	  if(this.blockList.contains(loginid)) {
-		  System.out.println("Blocked user message");
+		  //System.out.println("Blocked user message");
 		  return true;
 	  } else {
 		  return false;
@@ -101,8 +102,9 @@ public class ChatClient extends AbstractClient
    */
   public void handleMessageFromClientUI(String message)
   {
-	if((message.trim()).startsWith("#")) { // handle special commands
-		handleCommandFromClientUI(message.trim());
+	message = message.trim();
+	if((message).startsWith("#")) { // handle special commands
+		handleCommandFromClientUI(message);
 	} else { // if not a command send message to server
 		try
 	    {
@@ -144,27 +146,36 @@ public class ChatClient extends AbstractClient
 		} else if(command.equals("#block")) {
 			addToBlockList(arg);
 		} else if(command.equals("#whoiblock")) {
-			displayWhoIBlock();
+			clientUI.display("Block list:"+ getWhoIBlockString());
+		} else if(command.equals("#unblock") && arg != null) {
+			sendToServer("#removeblock "+arg.toLowerCase());
+			this.blockList.remove(arg);
+		} else if(command.equals("#unblock") && arg == null) {
+			this.blockList.clear();
+		} else if(command.equals("#whoblocksme")) {
+			sendToServer(command);
 		} else {
 			System.out.println("Illegal command. Use: #command <arg>");
 		}
-	} catch(Exception e) {
+	} catch(IOException e) {
 		
 	}
   }
 
-private void displayWhoIBlock() {
+public String getWhoIBlockString() {
 	String blockList = "";
 	for(String s:this.blockList) {
 		blockList += s+" ";
 	}
-	clientUI.display("Block list:"+ blockList);
+	return blockList.trim();
 }
 
 
-private void addToBlockList(String arg) {
-	clientUI.display("Adding user to block list:"+arg);
+private void addToBlockList(String arg) throws IOException {
+	arg = arg.toLowerCase();
+	sendToServer("#addblock "+arg);
 	this.blockList.add(arg);
+	clientUI.display("Added user to block list: "+arg);
 }
 
 private void setPort(String arg) {

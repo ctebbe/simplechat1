@@ -21,14 +21,13 @@ public class ServerConsole implements ChatIF {
 
 
 	public void display(String message) {
-		String msg = "SERVER MSG> " + message;
+		String msg = "SERVER> "+message;
 		server.sendToAllClients(msg);
 	}
 
 	public void accept() {
 		try {
-			BufferedReader fromConsole = new BufferedReader(
-					new InputStreamReader(System.in));
+			BufferedReader fromConsole = new BufferedReader(new InputStreamReader(System.in));
 			String message;
 
 			while (true) {
@@ -36,7 +35,7 @@ public class ServerConsole implements ChatIF {
 				if ((message.trim()).startsWith("#")) {
 					handleServerCommand(message);
 				} else {
-					System.out.println("Message received: " + message + " from server console");
+					//System.out.println("Message received: " + message + " from server console");
 					display(message);
 				}
 			}
@@ -59,14 +58,16 @@ public class ServerConsole implements ChatIF {
 				quit();
 			} else if(command.equals("#stop")) {
 				stop();
-			}else if(command.equals("#close")) {
+			} else if(command.equals("#close")) {
 				close();
-			}else if(command.equals("#setport")) {
+			} else if(command.equals("#setport")) {
 				setPort(Integer.parseInt(arg));
-			}else if(command.equals("#start")) {
+			} else if(command.equals("#start")) {
 				start();
-			}else if(command.equals("#getport")) {
+			} else if(command.equals("#getport")) {
 				getPort();
+			} else if(command.equals("#block")) {
+				server.addToBlockList(arg);
 			} else {
 				System.out.println("Illegal command. Use: #command <arg>");
 			}

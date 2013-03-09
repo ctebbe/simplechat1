@@ -3,6 +3,7 @@
 // license found at www.lloseng.com 
 
 import java.io.*;
+import java.util.ArrayList;
 
 import ocsf.server.*;
 
@@ -25,6 +26,8 @@ public class EchoServer extends AbstractServer
    * The default port to listen on.
    */
   final public static int DEFAULT_PORT = 5555;
+  private ArrayList<ConnectionToClient> clientList;
+  private ArrayList<String> blockList;
   
   //Constructors ****************************************************
   
@@ -36,6 +39,8 @@ public class EchoServer extends AbstractServer
   public EchoServer(int port) 
   {
     super(port);
+    clientList = new ArrayList<ConnectionToClient>();
+    blockList = new ArrayList<String>();
   }
 
   
@@ -51,7 +56,7 @@ public class EchoServer extends AbstractServer
 	  
 	  String loginid = (String) client.getInfo("loginid");
 	  if( (((msg.toString()).trim()).startsWith("#")) ) { // handle command
-		  handleClientCommand(msg.toString().trim(), client);
+		  handleClientCommand(msg.toString(), client);
 	  } else { // not a command
 		  if(loginid != null) {
 			  System.out.println("Message recieved from: "+loginid);
@@ -62,9 +67,11 @@ public class EchoServer extends AbstractServer
 	  }
   }
   
-  private void handleClientCommand(String command, ConnectionToClient client) {
+  @SuppressWarnings("unchecked")
+private void handleClientCommand(String command, ConnectionToClient client) {
 	  
 	// pull argument from command if there is any
+	command = command.trim();
 	String arg = null;
 	int argIndex = command.indexOf(' ');
 	if(argIndex != -1) {
@@ -76,23 +83,57 @@ public class EchoServer extends AbstractServer
 	if( (client.getInfo("loginid") == null) ) { // check user has a loginid and if doesnt then make sure its calling #login
 		if(command.equals("#login")) {
 			client.setInfo("loginid", arg);
+			client.setInfo("blocklist", new ArrayList<String>());
+			this.clientList.add(client);
 		} else {
 			System.out.println("Command recieved from client but not logged in.");
 			try {
 				client.close();
 			} catch (IOException e) {}
 		}
+	} else if(command.equals("#whoblocksme")) {
+		sendClientWhoBlocksThem(client);
+	} else if(command.equals("#addblock")) {
+		System.out.println("server adding block:"+arg+" from "+client.getInfo("loginid"));
+		((ArrayList<String>) client.getInfo("blocklist")).add(arg.toLowerCase());
+	} else if(command.equals("#removeblock")) {
+		((ArrayList<String>) client.getInfo("blocklist")).remove(arg);
 	} else {
 		
 	}
 	
   }
 
+@SuppressWarnings("unchecked")
+private void sendClientWhoBlocksThem(ConnectionToClient client) {
+	String idToSearch = ((String) client.getInfo("loginid")).toLowerCase();
+	String clientBlockString = "";
+	System.out.println("id to search:"+idToSearch);
+	for(ConnectionToClient c : this.clientList) {
+		ArrayList<String> cBlockList = (ArrayList<String>) c.getInfo("blocklist");
+		if(cBlockList.contains(idToSearch)) {
+			System.out.println(c.getInfo("loginid")+" blocking "+client.getInfo("loginid"));
+			clientBlockString += (String) c.getInfo("loginid")+" ";
+		}
+	}
+	try {
+		Object msg = (Object) "Who blocks you:"+clientBlockString.trim();
+		System.out.println("Sending message to client");
+		((ConnectionToClient) client).sendToClient(msg);
+	} catch (IOException e) {System.out.println("Cannot send to client");}
+}
+
+public void addToBlockList(String arg) {
+	if(arg != null) {
+		this.blockList.add(arg);
+	}
+}
 
 /**
    * called when a client connects
    */
   protected void clientConnected(ConnectionToClient client) {
+	clientList.add(client);
 	System.out.println("Client connected.");
   }
   
@@ -100,6 +141,7 @@ public class EchoServer extends AbstractServer
    * called when a client disconnected
    */
   synchronized protected void clientDisconnected(ConnectionToClient client) {
+	  clientList.remove(client);
 	  System.out.println("Client disconnected.");
   }
     
