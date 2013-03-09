@@ -66,7 +66,11 @@ public class ChatClient extends AbstractClient
 			sendToServer("#login "+this.loginid);
 			clientUI.display("Logged in as "+this.loginid);
 		}
-	} catch (IOException e) {}
+	} catch (IOException e) {
+		System.out.println("Error: Can't setup connection!"
+				+ " Terminating client.");
+		System.exit(1);
+	}
 }
 
 /**
