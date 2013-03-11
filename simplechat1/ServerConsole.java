@@ -21,7 +21,8 @@ public class ServerConsole implements ChatIF {
 
 
 	public void display(String message) {
-		String msg = "SERVER> "+message;
+		String msg = "SERVER MESSAGE> "+message;
+		System.out.println("SERVER MESSAGE> " +message);
 		server.sendToAllClients(msg);
 	}
 
@@ -57,6 +58,7 @@ public class ServerConsole implements ChatIF {
 			if(command.equals("#quit")) {
 				quit();
 			} else if(command.equals("#stop")) {
+				display("WARNING - The server has stopped listening for connection");
 				stop();
 			} else if(command.equals("#close")) {
 				close();
@@ -106,8 +108,7 @@ public class ServerConsole implements ChatIF {
 	}
 
 	private void quit() throws IOException {
-		display("Server exiting.");
-		server.close();
+		display("WARNING - Server is shutting down.");
 		System.exit(0);
 	}
 	
