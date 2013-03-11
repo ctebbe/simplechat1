@@ -61,10 +61,14 @@ public class EchoServer extends AbstractServer
 		if( (((msg.toString()).trim()).startsWith("#")) ) { // handle command
 			handleClientCommand(msg.toString(), client);
 		} else { // not a command
-			if(loginid != null) {
-				System.out.println("Message received: " + msg + " from " + loginid);
+			if(loginid != null && serverBlockList.contains(client.getInfo("loginid"))) {
+				sendToAllClients(loginid+"> "+msg);
+			}
+			else if(loginid != null && !serverBlockList.contains(client.getInfo("loginid"))){
+				System.out.println("Message received "+ msg + " from " + client.getInfo("loginid"));
 				sendToAllClients(loginid+"> "+msg);
 			} else {
+
 				System.out.println("Client sending message but not logged in.");
 			}
 		}
@@ -153,10 +157,27 @@ public class EchoServer extends AbstractServer
 
 	}
 
-	public void addToBlockList(String arg) {
-		if(arg != null) {
-			this.serverBlockList.add(arg);
+	//Used by the server the block non-command messages from clients
+	public void addToServerBlockList(String arg) {
+
+		if(clientList.contains(arg)){
+			if(arg.equalsIgnoreCase("server")) {
+				System.out.println("You cannot block the sending of messages to yourself.");
+			}
+			else {
+				if(!serverBlockList.contains(arg)){
+					serverBlockList.add(arg);
+					System.out.println("User " + arg + " added to block list.");
+				}
+				else{
+					System.out.println("Messages from " + arg + " were already blocked");
+				}
+			}
 		}
+		else{
+			System.out.println("User " + arg + " does not exist");
+		}
+		System.out.println("Blocklist size: " + serverBlockList.size());
 	}
 
 	/**

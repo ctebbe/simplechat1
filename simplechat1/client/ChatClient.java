@@ -83,7 +83,6 @@ public class ChatClient extends AbstractClient
 
 	private boolean isMessageFromBlockedClient(String message) {
 		// server format: loginid> message
-		System.out.println("Message is: " + message);
 		int loginidIndex = message.indexOf('>');
 		String loginid = "";
 		loginid = (message.substring(0, loginidIndex)).toLowerCase();

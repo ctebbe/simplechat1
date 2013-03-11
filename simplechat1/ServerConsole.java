@@ -70,7 +70,7 @@ public class ServerConsole implements ChatIF {
 			} else if(command.equals("#getport")) {
 				getPort();
 			} else if(command.equals("#block")) {
-				server.addToBlockList(arg);
+				server.addToServerBlockList(arg);
 			} else {
 				System.out.println("Illegal command. Use: #command <arg>");
 			}
