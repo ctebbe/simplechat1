@@ -113,17 +113,18 @@ public class EchoServer extends AbstractServer
 	}
 
 	private void removeClientBlock(String blocker, String blockee) {
-		if(blockee.equals("SERVER")){
-			clientBlockList.get(blocker).remove("SERVER");
+		if(blockee.equalsIgnoreCase("SERVER")){
+			clientBlockList.get(blocker).remove("server");
 		}
 		else{
-		(clientBlockList.get(blocker)).remove(blockee);
+			clientBlockList.get(blocker).remove(blockee);
 		}
 	}
 
 
 	private void addClientBlock(ConnectionToClient client, String blocker, String blockee) {
 		try {
+			System.out.println(clientBlockList.get(blocker));
 			if (clientList.contains(blockee)){
 				ArrayList<String> blockList = clientBlockList.get(blocker);
 				if (blockList == null) {
@@ -166,7 +167,7 @@ public class EchoServer extends AbstractServer
 	public void addToServerBlockList(String arg) {
 
 		if(clientList.contains(arg)){
-			if(arg.equals("server")) {
+			if(arg.equalsIgnoreCase("server")) {
 				System.out.println("You cannot block the sending of messages to yourself.");
 			}
 			else {
@@ -182,7 +183,7 @@ public class EchoServer extends AbstractServer
 		else{
 			System.out.println("User " + arg + " does not exist");
 		}
-	
+
 	}
 
 	/**

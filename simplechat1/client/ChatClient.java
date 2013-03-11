@@ -204,7 +204,7 @@ public class ChatClient extends AbstractClient
 	//Removes specific user from block list. If no user is specified, remove everyone.
 	private void removeFromBlockList(String arg) throws IOException{
 
-		if(arg.equals(loginid)){
+		if(arg.equalsIgnoreCase(loginid)){
 			clientUI.display("Cannot unblock yourself because you can't block yourself!");	
 		}
 		else if(arg == ""){
@@ -212,13 +212,13 @@ public class ChatClient extends AbstractClient
 				clientUI.display("No blocking is in effect.");
 			}
 			else{
-				System.out.println("oh hi");
 				if(!blockList.isEmpty()){
 					while(!blockList.isEmpty()){
 						int position = blockList.size() - 1;
 						sendToServer("#removeblock "+blockList.get(position));
+						String id = blockList.get(position);
 						blockList.remove(position);
-						clientUI.display("Messages from " +blockList.get(position)+ "will now be displayed");
+						clientUI.display("Messages from " +id+ " will now be displayed");
 					}
 				}
 				else{
