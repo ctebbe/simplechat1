@@ -5,8 +5,6 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-
 import ocsf.server.*;
 
 /**
@@ -30,6 +28,7 @@ public class EchoServer extends AbstractServer
   final public static int DEFAULT_PORT = 5555;
   HashMap<String, ArrayList<String>> clientBlockList;
   private ArrayList<String> serverBlockList;
+  private ArrayList<String> clientList;
   
   //Constructors ****************************************************
   
@@ -44,6 +43,7 @@ public class EchoServer extends AbstractServer
     //clientList = new ArrayList<ConnectionToClient>();
     clientBlockList = new HashMap<String, ArrayList<String>>();
     serverBlockList = new ArrayList<String>();
+    clientList = new ArrayList<String>();
   }
 
   
@@ -85,6 +85,7 @@ private void handleClientCommand(String command, ConnectionToClient client) {
 	if( (client.getInfo("loginid") == null) ) { // check user has a loginid and if doesnt then make sure its calling #login
 		if(command.equals("#login")) {
 			client.setInfo("loginid", arg);
+			clientList.add(arg);
 		} else {
 			System.out.println("Command recieved from client but not logged in.");
 			try {
@@ -97,7 +98,8 @@ private void handleClientCommand(String command, ConnectionToClient client) {
 		addClientBlock((String)client.getInfo("loginid"), arg);
 	} else if(command.equals("#removeblock")) {
 		removeClientBlock((String)client.getInfo("loginid"), arg);
-	} else {
+	}
+	else {
 		
 	}
 	
@@ -143,7 +145,6 @@ public void addToBlockList(String arg) {
    * called when a client connects
    */
   protected void clientConnected(ConnectionToClient client) {
-	//clientList.add(client);
 	System.out.println("Client connected.");
   }
   
@@ -151,7 +152,7 @@ public void addToBlockList(String arg) {
    * called when a client disconnected
    */
   synchronized protected void clientDisconnected(ConnectionToClient client) {
-	  //clientList.remove(client);
+	  clientList.remove(client.getInfo("loginid"));
 	  System.out.println("Client disconnected.");
   }
     
@@ -208,7 +209,8 @@ public void addToBlockList(String arg) {
     } 
     catch (Exception ex) 
     {
-      System.out.println("ERROR - Could not listen for clients!");
+      System.out.println("ERROR: Port occupied! Could not listen for clients! Terminating...");
+      System.exit(1);
     }
     server.accept();
   }

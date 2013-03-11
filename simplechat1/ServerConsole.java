@@ -133,7 +133,8 @@ public class ServerConsole implements ChatIF {
 	    } 
 	    catch (Exception ex) 
 	    {
-	      System.out.println("ERROR - Could not listen for clients!");
+	      System.out.println("ERROR - Could not listen for clients on specified port, shutting down!");
+	      System.exit(1);
 	    }
 	    server.accept();
 	  }

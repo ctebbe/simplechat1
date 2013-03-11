@@ -100,7 +100,7 @@ public class ClientConsole implements ChatIF {
 		try {
 			loginid = args[0];
 		} catch (ArrayIndexOutOfBoundsException e) {
-			System.out.println("Must provide loginid to start session");
+			System.out.println("ERROR - No login ID specified. Connection aborted");
 			System.exit(0);
 		}
 

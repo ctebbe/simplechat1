@@ -67,9 +67,7 @@ public class ChatClient extends AbstractClient
 			clientUI.display("Logged in as "+this.loginid);
 		}
 	} catch (IOException e) {
-		System.out.println("Error: Can't setup connection!"
-				+ " Terminating client.");
-		System.exit(1);
+		System.out.println("Cannot open connection. Awaiting command.");
 	}
 }
 
@@ -136,28 +134,37 @@ public class ChatClient extends AbstractClient
 		if(command.equals("#quit")) {
 			quit();
 		} else if(command.equals("#logoff")) {
+			sendToServer(command);
 			logoff();
+			
 		} else if(command.equals("#sethost")) {
 			changeHost(arg);
+			
 		} else if(command.equals("#setport")) {
 			setPort(arg);
+			
 		} else if(command.equals("#login")) {
 			login();
+			
 		} else if(command.equals("#gethost")) {
 			clientUI.display("Current host: "+getHost());
+			
 		} else if(command.equals("#getport")) {
 			clientUI.display("Current port: "+getPort());
+			
+			
 		} else if(command.equals("#block")) {
 			addToBlockList(arg);
+			
 		} else if(command.equals("#whoiblock")) {
 			clientUI.display("Block list:"+ getWhoIBlockString());
-		} else if(command.equals("#unblock") && arg != null) {
-			sendToServer("#removeblock "+arg.toLowerCase());
-			this.blockList.remove(arg);
-		} else if(command.equals("#unblock") && arg == null) {
-			this.blockList.clear();
+			
+		} else if(command.equals("#unblock")) {
+			removeFromBlockList(arg);
+			
 		} else if(command.equals("#whoblocksme")) {
 			sendToServer(command);
+			
 		} else {
 			System.out.println("Illegal command. Use: #command <arg>");
 		}
@@ -174,16 +181,45 @@ public String getWhoIBlockString() {
 	return blockList.trim();
 }
 
-
+//Adds a specified user to the block list
 private void addToBlockList(String arg) throws IOException {
 	if(arg.equalsIgnoreCase(loginid)) {
-		clientUI.display("Cannot block yourself!");
+		clientUI.display("You cannot block the sending of messages to yourself");
 	} else {
 		arg = arg.toLowerCase();
 		sendToServer("#addblock "+arg);
 		this.blockList.add(arg);
-		clientUI.display("Added user to block list: "+arg);
+		clientUI.display("Messages from "+arg+ " will be blocked.");
 	}
+}
+
+//Removes specific user from block list. If no user is specified, remove everyone.
+private void removeFromBlockList(String arg) throws IOException{
+	
+	if(arg.equalsIgnoreCase(loginid)){
+		clientUI.display("Cannot unblock yourself because you can't block yourself!");	
+	}
+	else if(arg == null){
+		if(blockList.isEmpty()){
+			clientUI.display("No blocking is in effect.");
+		}
+		else{
+			while(!blockList.isEmpty()){
+				int position = blockList.size() - 1;
+				sendToServer("#removeblock "+blockList.get(position));
+				clientUI.display("Messages from " +blockList.get(position)+ "will now be displayed");
+				blockList.remove(position);
+			}		
+		blockList.clear();
+		}
+	}
+	else {
+		arg = arg.toLowerCase();
+		sendToServer("#removeblock " +arg);
+		blockList.remove(arg);
+		clientUI.display("Removed user from block list: " +arg);
+	}
+	
 }
 
 private void setPort(String arg) {
