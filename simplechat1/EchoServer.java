@@ -4,6 +4,8 @@
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import ocsf.server.*;
 
@@ -26,8 +28,8 @@ public class EchoServer extends AbstractServer
    * The default port to listen on.
    */
   final public static int DEFAULT_PORT = 5555;
-  private ArrayList<ConnectionToClient> clientList;
-  private ArrayList<String> blockList;
+  HashMap<String, ArrayList<String>> clientBlockList;
+  private ArrayList<String> serverBlockList;
   
   //Constructors ****************************************************
   
@@ -39,8 +41,9 @@ public class EchoServer extends AbstractServer
   public EchoServer(int port) 
   {
     super(port);
-    clientList = new ArrayList<ConnectionToClient>();
-    blockList = new ArrayList<String>();
+    //clientList = new ArrayList<ConnectionToClient>();
+    clientBlockList = new HashMap<String, ArrayList<String>>();
+    serverBlockList = new ArrayList<String>();
   }
 
   
@@ -67,7 +70,6 @@ public class EchoServer extends AbstractServer
 	  }
   }
   
-  @SuppressWarnings("unchecked")
 private void handleClientCommand(String command, ConnectionToClient client) {
 	  
 	// pull argument from command if there is any
@@ -83,8 +85,6 @@ private void handleClientCommand(String command, ConnectionToClient client) {
 	if( (client.getInfo("loginid") == null) ) { // check user has a loginid and if doesnt then make sure its calling #login
 		if(command.equals("#login")) {
 			client.setInfo("loginid", arg);
-			client.setInfo("blocklist", new ArrayList<String>());
-			this.clientList.add(client);
 		} else {
 			System.out.println("Command recieved from client but not logged in.");
 			try {
@@ -92,40 +92,50 @@ private void handleClientCommand(String command, ConnectionToClient client) {
 			} catch (IOException e) {}
 		}
 	} else if(command.equals("#whoblocksme")) {
-		sendClientWhoBlocksThem(client);
+		sendClientWhoBlocksThem((String)client.getInfo("loginid"));
 	} else if(command.equals("#addblock")) {
-		System.out.println("server adding block:"+arg+" from "+client.getInfo("loginid"));
-		((ArrayList<String>) client.getInfo("blocklist")).add(arg.toLowerCase());
+		addClientBlock((String)client.getInfo("loginid"), arg);
 	} else if(command.equals("#removeblock")) {
-		((ArrayList<String>) client.getInfo("blocklist")).remove(arg);
+		removeClientBlock((String)client.getInfo("loginid"), arg);
 	} else {
 		
 	}
 	
   }
 
-@SuppressWarnings("unchecked")
-private void sendClientWhoBlocksThem(ConnectionToClient client) {
-	String idToSearch = ((String) client.getInfo("loginid")).toLowerCase();
-	String clientBlockString = "";
-	System.out.println("id to search:"+idToSearch);
-	for(ConnectionToClient c : this.clientList) {
-		ArrayList<String> cBlockList = (ArrayList<String>) c.getInfo("blocklist");
-		if(cBlockList.contains(idToSearch)) {
-			System.out.println(c.getInfo("loginid")+" blocking "+client.getInfo("loginid"));
-			clientBlockString += (String) c.getInfo("loginid")+" ";
+private void removeClientBlock(String blocker, String blockee) {
+	(clientBlockList.get(blocker)).remove(blockee);
+}
+
+
+private void addClientBlock(String blocker, String blockee) {
+	ArrayList<String> blockList = clientBlockList.get(blocker);
+	if (blockList == null) {
+		blockList = new ArrayList<String>();
+		clientBlockList.put(blocker, blockList);
+	}
+	blockList.add(blockee.toLowerCase());
+}
+
+
+private void sendClientWhoBlocksThem(String client) {
+	// client.sendToClient() doesnt work for some reason..
+	System.out.println("looking for users who block:"+client);
+	for(String user : this.clientBlockList.keySet()) {
+		System.out.println("checking in block list belonging to:"+user);
+		for(String blocked : clientBlockList.get(user)) {
+			System.out.println("blocks: "+blocked+" "+client.equalsIgnoreCase(blocked));
+			if( client.equalsIgnoreCase(blocked) ) {
+				sendToAllClients("blockedby "+client+" "+blocked);
+			}
 		}
 	}
-	try {
-		Object msg = (Object) "Who blocks you:"+clientBlockString.trim();
-		System.out.println("Sending message to client");
-		((ConnectionToClient) client).sendToClient(msg);
-	} catch (IOException e) {System.out.println("Cannot send to client");}
+	
 }
 
 public void addToBlockList(String arg) {
 	if(arg != null) {
-		this.blockList.add(arg);
+		this.serverBlockList.add(arg);
 	}
 }
 
@@ -133,7 +143,7 @@ public void addToBlockList(String arg) {
    * called when a client connects
    */
   protected void clientConnected(ConnectionToClient client) {
-	clientList.add(client);
+	//clientList.add(client);
 	System.out.println("Client connected.");
   }
   
@@ -141,7 +151,7 @@ public void addToBlockList(String arg) {
    * called when a client disconnected
    */
   synchronized protected void clientDisconnected(ConnectionToClient client) {
-	  clientList.remove(client);
+	  //clientList.remove(client);
 	  System.out.println("Client disconnected.");
   }
     

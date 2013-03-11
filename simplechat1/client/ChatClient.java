@@ -176,10 +176,14 @@ public String getWhoIBlockString() {
 
 
 private void addToBlockList(String arg) throws IOException {
-	arg = arg.toLowerCase();
-	sendToServer("#addblock "+arg);
-	this.blockList.add(arg);
-	clientUI.display("Added user to block list: "+arg);
+	if(arg.equalsIgnoreCase(loginid)) {
+		clientUI.display("Cannot block yourself!");
+	} else {
+		arg = arg.toLowerCase();
+		sendToServer("#addblock "+arg);
+		this.blockList.add(arg);
+		clientUI.display("Added user to block list: "+arg);
+	}
 }
 
 private void setPort(String arg) {
