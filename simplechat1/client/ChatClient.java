@@ -8,7 +8,7 @@ import ocsf.client.*;
 import common.*;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.List;
+
 
 /**
  * This class overrides some of the methods defined in the abstract
@@ -83,12 +83,12 @@ public class ChatClient extends AbstractClient
 
 	private boolean isMessageFromBlockedClient(String message) {
 		// server format: loginid> message
+		System.out.println("Message is: " + message);
 		int loginidIndex = message.indexOf('>');
 		String loginid = "";
 		loginid = (message.substring(0, loginidIndex)).toLowerCase();
 
-		if(this.blockList.contains(loginid)) {
-			//System.out.println("Blocked user message");
+		if(blockList.contains(loginid)) {
 			return true;
 		} else {
 			return false;
@@ -182,13 +182,22 @@ public class ChatClient extends AbstractClient
 	//Adds a specified user to the block list
 	private void addToBlockList(String arg) throws IOException {
 		if(arg.equalsIgnoreCase(loginid)) {
-			clientUI.display("You cannot block the sending of messages to yourself");
-		} else {
+			clientUI.display("You cannot block the sending of messages to yourself.");
+		}
+		else if(arg.equalsIgnoreCase("server")){
+			sendToServer("#addblock "+arg);
+			if(!blockList.contains("server")){
+				blockList.add("server");
+			}
+		}
+		else {
 			arg = arg.toLowerCase();
 			sendToServer("#addblock "+arg);
-			this.blockList.add(arg);
-			clientUI.display("Messages from "+arg+ " will be blocked.");
+			if(!blockList.contains(arg)){
+				blockList.add(arg);
+			}		
 		}
+		System.out.println("Blocklist size: " + blockList.size());
 	}
 
 	//Removes specific user from block list. If no user is specified, remove everyone.

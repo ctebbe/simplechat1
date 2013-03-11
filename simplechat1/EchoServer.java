@@ -43,6 +43,7 @@ public class EchoServer extends AbstractServer
 		clientBlockList = new HashMap<String, ArrayList<String>>();
 		serverBlockList = new ArrayList<String>();
 		clientList = new ArrayList<String>();
+		clientList.add("server"); //Add server to client list so it can be blocked by clients
 	}
 
 
@@ -97,7 +98,7 @@ public class EchoServer extends AbstractServer
 		} else if(command.equals("#whoblocksme")) {
 			sendClientWhoBlocksThem((String)client.getInfo("loginid"));
 		} else if(command.equals("#addblock")) {
-			addClientBlock((String)client.getInfo("loginid"), arg);
+			addClientBlock(client,(String)client.getInfo("loginid"), arg);
 		} else if(command.equals("#removeblock")) {
 			removeClientBlock((String)client.getInfo("loginid"), arg);
 		}
@@ -112,13 +113,28 @@ public class EchoServer extends AbstractServer
 	}
 
 
-	private void addClientBlock(String blocker, String blockee) {
-		ArrayList<String> blockList = clientBlockList.get(blocker);
-		if (blockList == null) {
-			blockList = new ArrayList<String>();
-			clientBlockList.put(blocker, blockList);
+	private void addClientBlock(ConnectionToClient client, String blocker, String blockee) {
+		try {
+			if (clientList.contains(blockee)){
+				ArrayList<String> blockList = clientBlockList.get(blocker);
+				if (blockList == null) {
+					blockList = new ArrayList<String>();
+					clientBlockList.put(blocker, blockList);
+				}
+				if(blockList.contains(blockee)){
+					client.sendToClient("> " + "Messages from " + blockee + " were already blocked.");
+				}
+				else{
+					blockList.add(blockee.toLowerCase());
+					client.sendToClient("> " + "User " + blockee + " added to block list.");
+				}
+			} 
+			else{
+				client.sendToClient("> " + "User " + blockee + " does not exist.");
+			}
+		} catch (IOException e) {
+			System.out.println("ERROR: Connection to client lost. Could not modify block list.");
 		}
-		blockList.add(blockee.toLowerCase());
 	}
 
 
