@@ -19,7 +19,6 @@ import java.util.List;
  * @author Fran&ccedil;ois B&eacute;langer
  * @version July 2000
  */
-@SuppressWarnings("unused")
 public class ChatClient extends AbstractClient
 {
 	//Instance variables **********************************************
@@ -64,7 +63,6 @@ public class ChatClient extends AbstractClient
 			} else {
 				openConnection();
 				sendToServer("#login "+this.loginid);
-				clientUI.display(loginid + " has logged on");
 			}
 		} catch (IOException e) {
 			System.out.println("Cannot open connection. Awaiting command.");
@@ -132,10 +130,9 @@ public class ChatClient extends AbstractClient
 		// parse command
 		try {
 			if(command.equals("#quit")) {
-				setQuitOnClose(true);
 				quit();
 			} else if(command.equals("#logoff")) {
-				sendToServer(command);
+				setQuitOnClose(true);
 				logoff();
 
 			} else if(command.equals("#sethost")) {
@@ -200,7 +197,7 @@ public class ChatClient extends AbstractClient
 		if(arg.equalsIgnoreCase(loginid)){
 			clientUI.display("Cannot unblock yourself because you can't block yourself!");	
 		}
-		else if(arg == null){
+		else if(arg == ""){
 			if(blockList.isEmpty()){
 				clientUI.display("No blocking is in effect.");
 			}
@@ -230,12 +227,13 @@ public class ChatClient extends AbstractClient
 			clientUI.display("No port argument. Use: #setport <port>");
 		} else {
 			setPort(Integer.parseInt(arg));
+			clientUI.display("Port set to: " + arg);
 		}
 	}
 
 	private void logoff() throws IOException {
-		setQuitOnClose(false); // disable client from quitting upon losing connection to server
 		closeConnection();
+		clientUI.display("Connectioned closed.");
 	}
 
 	private void changeHost(String arg) {
@@ -245,6 +243,7 @@ public class ChatClient extends AbstractClient
 			clientUI.display("No host argument. Use: #sethost <host>");
 		} else {
 			setHost(arg);
+			clientUI.display("Host set to: " + arg);
 		}
 	}
 
@@ -255,7 +254,6 @@ public class ChatClient extends AbstractClient
 	 */
 	public void connectionClosed() {
 		if(!quitOnClose()) {
-			clientUI.display("SERVER SHUTTING DOWN! DISCONNECTING!");
 			clientUI.display("Abnormal termination of connection");
 		}
 	}
@@ -270,7 +268,9 @@ public class ChatClient extends AbstractClient
 		{
 			closeConnection();
 		}
-		catch(IOException e) {}
+		catch(IOException e) {
+			System.exit(0);
+		}
 		System.exit(0);
 	}
 

@@ -29,7 +29,6 @@ public class EchoServer extends AbstractServer
 	HashMap<String, ArrayList<String>> clientBlockList;
 	private ArrayList<String> serverBlockList;
 	private ArrayList<String> clientList;
-
 	//Constructors ****************************************************
 
 	/**
@@ -87,6 +86,8 @@ public class EchoServer extends AbstractServer
 				client.setInfo("loginid", arg);
 				clientList.add(arg);
 				System.out.println(client.getInfo("loginid") + " has logged on");
+				sendToAllClients("> "+client.getInfo("loginid") + " has logged on");
+				sendToAllClients(client.getInfo("loginid") + " has logged on");
 			} else {
 				System.out.println("Command recieved from client but not logged in.");
 				try {
@@ -153,8 +154,8 @@ public class EchoServer extends AbstractServer
 	 * called when a client disconnected
 	 */
 	synchronized protected void clientDisconnected(ConnectionToClient client) {
+		sendToAllClients("> "+client.getInfo("loginid") + " has disconnected");
 		clientList.remove(client.getInfo("loginid"));
-		System.out.println(client.getInfo("loginid") + " has disconnected.");
 	}
 
 	/**

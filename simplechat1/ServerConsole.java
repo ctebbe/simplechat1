@@ -61,6 +61,7 @@ public class ServerConsole implements ChatIF {
 				display("WARNING - The server has stopped listening for connection");
 				stop();
 			} else if(command.equals("#close")) {
+				display("WARNING - Server is shutting down!");
 				close();
 			} else if(command.equals("#setport")) {
 				setPort(Integer.parseInt(arg));
@@ -96,6 +97,7 @@ public class ServerConsole implements ChatIF {
 			System.out.println("Server must be closed. Use #close and try again.");
 		} else {
 			server.setPort(port);
+			System.out.println("Port set to: " + port);
 		}
 	}
 
