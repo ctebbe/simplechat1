@@ -85,7 +85,7 @@ public class ChatClient extends AbstractClient
 		// server format: loginid> message
 		int loginidIndex = message.indexOf('>');
 		String loginid = "";
-		loginid = (message.substring(0, loginidIndex)).toLowerCase();
+		loginid = (message.substring(0, loginidIndex));
 
 		if(blockList.contains(loginid)) {
 			return true;
@@ -157,6 +157,10 @@ public class ChatClient extends AbstractClient
 				clientUI.display("Block list:"+ getWhoIBlockString());
 
 			} else if(command.equals("#unblock")) {
+		
+				if(arg == null){
+					arg = "";
+				}
 				removeFromBlockList(arg);
 
 			} else if(command.equals("#whoblocksme")) {
@@ -185,24 +189,22 @@ public class ChatClient extends AbstractClient
 		}
 		else if(arg.equalsIgnoreCase("server")){
 			sendToServer("#addblock "+arg);
-			if(!blockList.contains("server")){
-				blockList.add("server");
+			if(!blockList.contains("SERVER")){
+				blockList.add("SERVER");
 			}
 		}
 		else {
-			arg = arg.toLowerCase();
 			sendToServer("#addblock "+arg);
 			if(!blockList.contains(arg)){
 				blockList.add(arg);
 			}		
 		}
-		System.out.println("Blocklist size: " + blockList.size());
 	}
 
 	//Removes specific user from block list. If no user is specified, remove everyone.
 	private void removeFromBlockList(String arg) throws IOException{
 
-		if(arg.equalsIgnoreCase(loginid)){
+		if(arg.equals(loginid)){
 			clientUI.display("Cannot unblock yourself because you can't block yourself!");	
 		}
 		else if(arg == ""){
@@ -210,20 +212,36 @@ public class ChatClient extends AbstractClient
 				clientUI.display("No blocking is in effect.");
 			}
 			else{
-				while(!blockList.isEmpty()){
-					int position = blockList.size() - 1;
-					sendToServer("#removeblock "+blockList.get(position));
-					clientUI.display("Messages from " +blockList.get(position)+ "will now be displayed");
-					blockList.remove(position);
-				}		
-				blockList.clear();
+				System.out.println("oh hi");
+				if(!blockList.isEmpty()){
+					while(!blockList.isEmpty()){
+						int position = blockList.size() - 1;
+						sendToServer("#removeblock "+blockList.get(position));
+						blockList.remove(position);
+						clientUI.display("Messages from " +blockList.get(position)+ "will now be displayed");
+					}
+				}
+				else{
+					clientUI.display("No blocking is in effect.");
+				}
+
 			}
 		}
 		else {
-			arg = arg.toLowerCase();
-			sendToServer("#removeblock " +arg);
-			blockList.remove(arg);
-			clientUI.display("Removed user from block list: " +arg);
+			if(arg.equalsIgnoreCase("server") && blockList.contains("SERVER"))
+			{
+				sendToServer("#removeblock " + "SERVER");
+				blockList.remove("SERVER");
+				clientUI.display("Messages from " + arg + " will now be displayed");
+			}
+		else if(blockList.contains(arg)){
+				sendToServer("#removeblock " +arg);
+				blockList.remove(arg);
+				clientUI.display("Messages from " + arg + " will now be displayed");
+			}
+			else{
+				clientUI.display("Messages from " + arg + " were not blocked.");
+			}
 		}
 
 	}

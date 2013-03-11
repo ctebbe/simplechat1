@@ -36,7 +36,6 @@ public class ServerConsole implements ChatIF {
 				if ((message.trim()).startsWith("#")) {
 					handleServerCommand(message);
 				} else {
-					//System.out.println("Message received: " + message + " from server console");
 					display(message);
 				}
 			}

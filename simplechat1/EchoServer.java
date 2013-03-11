@@ -113,7 +113,12 @@ public class EchoServer extends AbstractServer
 	}
 
 	private void removeClientBlock(String blocker, String blockee) {
+		if(blockee.equals("SERVER")){
+			clientBlockList.get(blocker).remove("SERVER");
+		}
+		else{
 		(clientBlockList.get(blocker)).remove(blockee);
+		}
 	}
 
 
@@ -129,8 +134,8 @@ public class EchoServer extends AbstractServer
 					client.sendToClient("> " + "Messages from " + blockee + " were already blocked.");
 				}
 				else{
-					blockList.add(blockee.toLowerCase());
-					client.sendToClient("> " + "User " + blockee + " added to block list.");
+					blockList.add(blockee);
+					client.sendToClient("> " + "Messages from " + blockee + " will be blocked.");
 				}
 			} 
 			else{
@@ -148,8 +153,8 @@ public class EchoServer extends AbstractServer
 		for(String user : this.clientBlockList.keySet()) {
 			System.out.println("checking in block list belonging to:"+user);
 			for(String blocked : clientBlockList.get(user)) {
-				System.out.println("blocks: "+blocked+" "+client.equalsIgnoreCase(blocked));
-				if( client.equalsIgnoreCase(blocked) ) {
+				System.out.println("blocks: "+blocked+" "+client.equals(blocked));
+				if( client.equals(blocked) ) {
 					sendToAllClients("blocked by "+client+" "+blocked);
 				}
 			}
@@ -161,7 +166,7 @@ public class EchoServer extends AbstractServer
 	public void addToServerBlockList(String arg) {
 
 		if(clientList.contains(arg)){
-			if(arg.equalsIgnoreCase("server")) {
+			if(arg.equals("server")) {
 				System.out.println("You cannot block the sending of messages to yourself.");
 			}
 			else {
@@ -177,7 +182,7 @@ public class EchoServer extends AbstractServer
 		else{
 			System.out.println("User " + arg + " does not exist");
 		}
-		System.out.println("Blocklist size: " + serverBlockList.size());
+	
 	}
 
 	/**
