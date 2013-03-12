@@ -198,7 +198,10 @@ public class ChatClient extends AbstractClient
 
 	//Adds a specified user to the block list
 	private void addToBlockList(String arg) throws IOException {
-		if(arg.equalsIgnoreCase(loginid)) {
+		if(arg == null) {
+			clientUI.display("Must specify which user to block when using #block");
+		}
+		else if(arg.equalsIgnoreCase(loginid)) {
 			clientUI.display("You cannot block the sending of messages to yourself.");
 		}
 		

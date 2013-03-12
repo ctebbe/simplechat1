@@ -199,7 +199,7 @@ public class EchoServer extends AbstractServer
 	}
 
 
-	//Used by the server the block non-command messages from clients
+	//Used by the server to block non-command messages from clients
 	public void addToServerBlockList(String arg) {
 		if (clientList.contains(arg)){
 			ArrayList<String> blockList = clientBlockList.get("server");
@@ -219,30 +219,7 @@ public class EchoServer extends AbstractServer
 			System.out.println("> " + "User " + arg + " does not exist.");
 		}
 	}
-	/*	ArrayList<String> blockList = clientBlockList.get("server");
-		if (blockList == null) {
-			serverBlockList = new ArrayList<String>();
-			clientBlockList.put("server", serverBlockList);
-		}
-		if(clientList.contains(arg)){
-			if(arg.equalsIgnoreCase("server")) {
-				System.out.println("You cannot block the sending of messages to yourself.");
-			}
-			else {
-				if(!serverBlockList.contains(arg)){
-					serverBlockList.add(arg);
-					System.out.println("User " + arg + " added to block list.");
-				}
-				else{
-					System.out.println("Messages from " + arg + " were already blocked");
-				}
-			}
-		}
-		else{
-			System.out.println("User " + arg + " does not exist");
-		}
 
-	}*/
 	//Server side unblock method
 	public void removeFromServerBlockList(String arg){
 		if(clientList.contains(arg) || arg == "" || arg == null){
