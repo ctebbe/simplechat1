@@ -46,7 +46,6 @@ public class EchoServer extends AbstractServer
 	public EchoServer(int port) 
 	{
 		super(port);
-		//clientList = new ArrayList<ConnectionToClient>();
 		clientBlockList = new HashMap<String, ArrayList<String>>();
 		serverBlockList = new ArrayList<String>();
 		clientList = new ArrayList<String>();
@@ -69,15 +68,14 @@ public class EchoServer extends AbstractServer
 		String loginid = (String) client.getInfo("loginid");
 		if( (((msg.toString()).trim()).startsWith("#")) ) { // handle command
 			handleClientCommand(msg.toString(), client);
+			
 		} else { // not a command
-			if(loginid != null && serverBlockList.contains(client.getInfo("loginid"))) {
+			if(loginid != null) { // user logged in
+				if( !(serverBlockList.contains(client.getInfo("loginid"))) ) {
+					System.out.println("Message received "+ msg + " from " + client.getInfo("loginid"));
+				}
 				sendToAllClients(loginid+"> "+msg);
-			}
-			else if(loginid != null && !serverBlockList.contains(client.getInfo("loginid"))){
-				System.out.println("Message received "+ msg + " from " + client.getInfo("loginid"));
-				sendToAllClients(loginid+"> "+msg);
-			} else {
-
+			} else { // user not logged in
 				System.out.println("Client sending message but not logged in.");
 			}
 		}
@@ -94,21 +92,22 @@ public class EchoServer extends AbstractServer
 			arg = (command.substring(argIndex)).trim();
 			command = (command.substring(command.indexOf('#'), argIndex)).trim();
 		}
-		System.out.println("Message received "+ command + " from " + client.getInfo("loginid"));
-		//System.out.println("arg:"+arg);
+		
+		System.out.println("Command received "+ command + " from " + client.getInfo("loginid"));
 		if( (client.getInfo("loginid") == null) ) { // check user has a loginid and if doesnt then make sure its calling #login
-			if(command.equals("#login")) {
+			if(command.equals("#login")) { // client log in
 				client.setInfo("loginid", arg);
 				clientList.add(arg);
 				System.out.println(client.getInfo("loginid") + " has logged on");
 				sendToAllClients("> "+client.getInfo("loginid") + " has logged on");
-				sendToAllClients(client.getInfo("loginid") + " has logged on");
-			} else {
+			} else { // client requesting server use without logging in
 				System.out.println("Command recieved from client but not logged in.");
 				try {
 					client.close();
 				} catch (IOException e) {}
 			}
+			
+		// parse commands that can be sent from client to server 	
 		} else if(command.equals("#whoblocksme")) {
 			try {
 				sendClientWhoBlocksThem((String)client.getInfo("loginid"), client);
@@ -207,10 +206,10 @@ public class EchoServer extends AbstractServer
 				blockList = new ArrayList<String>();
 				clientBlockList.put("server", blockList);
 			}
-			if(blockList.contains(arg)){
+			
+			if(blockList.contains(arg)){ // server blocklist already contains the client
 				System.out.println("> " + "Messages from " + arg + " were already blocked.");
-			}
-			else{
+			} else{
 				blockList.add(arg);
 				System.out.println("> " + "Messages from " + arg + " will be blocked.");
 			}
