@@ -19,6 +19,13 @@ import java.util.ArrayList;
  * @author Fran&ccedil;ois B&eacute;langer
  * @version July 2000
  */
+
+/**
+ * CS 314
+ * @author calebtebbe
+ * @author zachkaplan
+ *
+ */
 public class ChatClient extends AbstractClient
 {
 	//Instance variables **********************************************
@@ -154,10 +161,17 @@ public class ChatClient extends AbstractClient
 				addToBlockList(arg);
 
 			} else if(command.equals("#whoiblock")) {
-				clientUI.display("Block list:"+ getWhoIBlockString());
+				if(blockList.isEmpty()){
+					System.out.println("No blocking is in effect.");
+				}
+				else{
+					for(int i = 0; i < blockList.size(); i++){
+						System.out.println("Messages from " + blockList.get(i) + " are blocked");
+					}
+				}
 
 			} else if(command.equals("#unblock")) {
-		
+
 				if(arg == null){
 					arg = "";
 				}
@@ -187,6 +201,11 @@ public class ChatClient extends AbstractClient
 		if(arg.equalsIgnoreCase(loginid)) {
 			clientUI.display("You cannot block the sending of messages to yourself.");
 		}
+		
+		else if(arg.equals(null) || arg.equals("")){
+			clientUI.display("You can't block everyone!");
+		}
+		
 		else if(arg.equalsIgnoreCase("server")){
 			sendToServer("#addblock "+arg);
 			if(!blockList.contains("SERVER")){
@@ -234,7 +253,7 @@ public class ChatClient extends AbstractClient
 				blockList.remove("SERVER");
 				clientUI.display("Messages from " + arg + " will now be displayed");
 			}
-		else if(blockList.contains(arg)){
+			else if(blockList.contains(arg)){
 				sendToServer("#removeblock " +arg);
 				blockList.remove(arg);
 				clientUI.display("Messages from " + arg + " will now be displayed");

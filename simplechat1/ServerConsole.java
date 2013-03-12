@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import common.ChatIF;
 
 /**
+ * CS 314
  * This class starts a server with echoserver as a shell
  * @author calebtebbe
  * @author zachkaplan
@@ -70,10 +71,19 @@ public class ServerConsole implements ChatIF {
 				getPort();
 			} else if(command.equals("#block")) {
 				server.addToServerBlockList(arg);
-			} else {
+			} else if(command.equals("#unblock")){
+				server.removeFromServerBlockList(arg);
+			} else if(command.equals("#whoiblock")){
+				server.whoIBlock();
+			}
+			else if(command.equals("#whoblocksme")){
+				server.whoBlocksServer();
+			}
+			else {
 				System.out.println("Illegal command. Use: #command <arg>");
 			}
 		} catch(Exception e) {
+			e.printStackTrace();
 			System.out.println("Error reading from server console.");
 		}
 		

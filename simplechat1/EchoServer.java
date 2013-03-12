@@ -2,6 +2,13 @@
 // "Object Oriented Software Engineering" and is issued under the open-source
 // license found at www.lloseng.com 
 
+/**
+ * CS 314
+ * @author calebtebbe
+ * @author zachkaplan
+ *
+ */
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,6 +51,7 @@ public class EchoServer extends AbstractServer
 		serverBlockList = new ArrayList<String>();
 		clientList = new ArrayList<String>();
 		clientList.add("server"); //Add server to client list so it can be blocked by clients
+		clientBlockList.put("server", serverBlockList);
 	}
 
 
@@ -55,6 +63,7 @@ public class EchoServer extends AbstractServer
 	 * @param msg The message received from the client.
 	 * @param client The connection from which the message originated.
 	 */
+	//Handles messages from client
 	public void handleMessageFromClient(Object msg, ConnectionToClient client) {
 
 		String loginid = (String) client.getInfo("loginid");
@@ -74,6 +83,7 @@ public class EchoServer extends AbstractServer
 		}
 	}
 
+	//Handles client commands
 	private void handleClientCommand(String command, ConnectionToClient client) {
 
 		// pull argument from command if there is any
@@ -100,7 +110,11 @@ public class EchoServer extends AbstractServer
 				} catch (IOException e) {}
 			}
 		} else if(command.equals("#whoblocksme")) {
-			sendClientWhoBlocksThem((String)client.getInfo("loginid"));
+			try {
+				sendClientWhoBlocksThem((String)client.getInfo("loginid"), client);
+			} catch (IOException e) {
+				System.out.println("Connection issues with client");
+			}
 		} else if(command.equals("#addblock")) {
 			addClientBlock(client,(String)client.getInfo("loginid"), arg);
 		} else if(command.equals("#removeblock")) {
@@ -112,6 +126,7 @@ public class EchoServer extends AbstractServer
 
 	}
 
+	//Removes a block that a client requests
 	private void removeClientBlock(String blocker, String blockee) {
 		if(blockee.equalsIgnoreCase("SERVER")){
 			clientBlockList.get(blocker).remove("server");
@@ -121,10 +136,9 @@ public class EchoServer extends AbstractServer
 		}
 	}
 
-
+	//Adds a block that a client requests
 	private void addClientBlock(ConnectionToClient client, String blocker, String blockee) {
 		try {
-			System.out.println(clientBlockList.get(blocker));
 			if (clientList.contains(blockee)){
 				ArrayList<String> blockList = clientBlockList.get(blocker);
 				if (blockList == null) {
@@ -148,24 +162,68 @@ public class EchoServer extends AbstractServer
 	}
 
 
-	private void sendClientWhoBlocksThem(String client) {
-		// client.sendToClient() doesnt work for some reason..
-		System.out.println("looking for users who block:"+client);
+	//Used to send clients messages about who blocks them
+	private void sendClientWhoBlocksThem(String clientID, ConnectionToClient client) throws IOException {
+
+		boolean blockage = false;
 		for(String user : this.clientBlockList.keySet()) {
-			System.out.println("checking in block list belonging to:"+user);
 			for(String blocked : clientBlockList.get(user)) {
-				System.out.println("blocks: "+blocked+" "+client.equals(blocked));
-				if( client.equals(blocked) ) {
-					sendToAllClients("blocked by "+client+" "+blocked);
+				if( clientID.equals(blocked) ) {
+					blockage = true;
+					client.sendToClient("> " + " Messages to " + user + " are blocked");
 				}
 			}
+		}
+		if(!blockage){
+			client.sendToClient("> " + " Nobody is blocking you! Yay :D");
 		}
 
 	}
 
+	//Used to found out which clients are blocking the server
+	public void whoBlocksServer(){
+		boolean blockage = false;
+		String serverID = "server";
+		for(String user : this.clientBlockList.keySet()) {
+			for(String blocked : clientBlockList.get(user)) {
+				if(serverID.equals(blocked) ) {
+					blockage = true;
+					System.out.println("> " + " Messages to " + user + " are blocked");
+				}
+			}
+		}
+		if(!blockage){
+			System.out.println("> " + " Nobody is blocking you! Yay :D");
+		}
+
+	}
+
+
 	//Used by the server the block non-command messages from clients
 	public void addToServerBlockList(String arg) {
-
+		if (clientList.contains(arg)){
+			ArrayList<String> blockList = clientBlockList.get("server");
+			if (blockList == null) {
+				blockList = new ArrayList<String>();
+				clientBlockList.put("server", blockList);
+			}
+			if(blockList.contains(arg)){
+				System.out.println("> " + "Messages from " + arg + " were already blocked.");
+			}
+			else{
+				blockList.add(arg);
+				System.out.println("> " + "Messages from " + arg + " will be blocked.");
+			}
+		} 
+		else{
+			System.out.println("> " + "User " + arg + " does not exist.");
+		}
+	}
+	/*	ArrayList<String> blockList = clientBlockList.get("server");
+		if (blockList == null) {
+			serverBlockList = new ArrayList<String>();
+			clientBlockList.put("server", serverBlockList);
+		}
 		if(clientList.contains(arg)){
 			if(arg.equalsIgnoreCase("server")) {
 				System.out.println("You cannot block the sending of messages to yourself.");
@@ -184,6 +242,55 @@ public class EchoServer extends AbstractServer
 			System.out.println("User " + arg + " does not exist");
 		}
 
+	}*/
+	//Server side unblock method
+	public void removeFromServerBlockList(String arg){
+		if(clientList.contains(arg) || arg == "" || arg == null){
+			if(arg == "" || arg == null){
+				if(clientBlockList.get("server").isEmpty()){
+					System.out.println("No blocking is in effect.");
+				}
+				else{
+					if(!clientBlockList.get("server").isEmpty()){
+						while(!clientBlockList.get("server").isEmpty()){
+							int position = clientBlockList.get("server").size() - 1;
+							String id = clientBlockList.get("server").get(position);
+							clientBlockList.get("server").remove(position);
+							System.out.println("Messages from " +id+ " will now be displayed");
+						}
+					}
+					else{
+						System.out.println("No blocking is in effect.");
+					}
+
+				}
+			}
+			else if(arg.equalsIgnoreCase("server")){
+				System.out.println("Cannot unblock yourself because you can't block yourself!");	
+			}
+			else{
+				if(clientList.contains(arg)){
+					clientBlockList.get("server").remove(arg);
+					System.out.println("Messages from " +arg+ " will now be displayed");
+				}
+			}
+
+		}
+		else{
+			System.out.println("User " + arg + " does not exist");
+		}
+	}
+
+	//Checks to see which clients the server is blocking
+	public void whoIBlock(){
+		if(clientBlockList.get("server").isEmpty()){
+			System.out.println("No blocking is in effect.");
+		}
+		else{
+			for(int i = 0; i < clientBlockList.get("server").size(); i++){
+				System.out.println("Messages from " + clientBlockList.get("server").get(i) + " are blocked");
+			}
+		}
 	}
 
 	/**
