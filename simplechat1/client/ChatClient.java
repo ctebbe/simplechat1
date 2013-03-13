@@ -38,6 +38,12 @@ public class ChatClient extends AbstractClient
 	private boolean quitOnClose; // use this to "logoff" and not terminate the client
 	private String loginid;
 	private ArrayList<String> blockList;
+	// user status codes
+	private int status;
+	private final static int ONLINE = 0;
+	private final static int IDLE = 1;
+	private final static int UNAVAIL = 2;
+	private final static int OFFLINE = 3;
 
 	//Constructors ****************************************************
 
@@ -56,6 +62,7 @@ public class ChatClient extends AbstractClient
 		this.quitOnClose = false;
 		this.loginid = loginid;
 		this.blockList = new ArrayList<String>();
+		this.status = OFFLINE; // init status to offline until logged into server
 		login();
 		//openConnection();
 	}
@@ -70,6 +77,7 @@ public class ChatClient extends AbstractClient
 			} else {
 				openConnection();
 				sendToServer("#login "+this.loginid);
+				this.status = ONLINE;
 			}
 		} catch (IOException e) {
 			System.out.println("Cannot open connection. Awaiting command.");
@@ -179,6 +187,12 @@ public class ChatClient extends AbstractClient
 
 			} else if(command.equals("#whoblocksme")) {
 				sendToServer(command);
+
+			} else if(command.equals("#notavailable")) {
+				this.status = UNAVAIL;
+
+			} else if(command.equals("#available")) {
+				this.status = ONLINE;
 
 			} else {
 				System.out.println("Illegal command. Use: #command <arg>");
