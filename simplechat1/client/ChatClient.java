@@ -164,27 +164,15 @@ public class ChatClient extends AbstractClient
 			} else if(command.equals("#getport")) {
 				clientUI.display("Current port: "+getPort());
 
-
 			} else if(command.equals("#block")) {
 				addToBlockList(arg);
 
 			} else if(command.equals("#whoiblock")) {
-				if(blockList.isEmpty()){
-					System.out.println("No blocking is in effect.");
-				}
-				else{
-					for(int i = 0; i < blockList.size(); i++){
-						System.out.println("Messages from " + blockList.get(i) + " are blocked");
-					}
-				}
-
+				whoIBlock();
+				
 			} else if(command.equals("#unblock")) {
-
-				if(arg == null){
-					arg = "";
-				}
 				removeFromBlockList(arg);
-
+				
 			} else if(command.equals("#whoblocksme")) {
 				sendToServer(command);
 
@@ -202,37 +190,30 @@ public class ChatClient extends AbstractClient
 		}
 	}
 
-	public String getWhoIBlockString() {
-		String blockList = "";
-		for(String s:this.blockList) {
-			blockList += s+" ";
+	private void whoIBlock() {
+		if(blockList.isEmpty()){
+			System.out.println("No blocking is in effect.");
 		}
-		return blockList.trim();
+		else{
+			for(String user : this.blockList){
+				System.out.println("Messages from "+user+" are blocked");
+			}
+		}
 	}
+
 
 	//Adds a specified user to the block list
 	private void addToBlockList(String arg) throws IOException {
 		if(arg == null) {
 			clientUI.display("Must specify which user to block when using #block");
-		}
-		else if(arg.equalsIgnoreCase(loginid)) {
+			
+		} else if(arg.equalsIgnoreCase(this.loginid)) {
 			clientUI.display("You cannot block the sending of messages to yourself.");
-		}
-		
-		else if(arg.equals(null) || arg.equals("")){
-			clientUI.display("You can't block everyone!");
-		}
-		
-		else if(arg.equalsIgnoreCase("server")){
-			sendToServer("#addblock "+arg);
-			if(!blockList.contains("SERVER")){
-				blockList.add("SERVER");
-			}
-		}
-		else {
-			sendToServer("#addblock "+arg);
+			
+		} else {
 			if(!blockList.contains(arg)){
-				blockList.add(arg);
+				blockList.add(arg.toLowerCase());
+				sendToServer("#addblock "+arg);
 			}		
 		}
 	}
@@ -240,46 +221,25 @@ public class ChatClient extends AbstractClient
 	//Removes specific user from block list. If no user is specified, remove everyone.
 	private void removeFromBlockList(String arg) throws IOException{
 
-		if(arg.equalsIgnoreCase(loginid)){
-			clientUI.display("Cannot unblock yourself because you can't block yourself!");	
+		if(this.blockList.isEmpty()) { // no blocks
+			clientUI.display("No blocking is in effect");
 		}
-		else if(arg == ""){
-			if(blockList.isEmpty()){
-				clientUI.display("No blocking is in effect.");
+		
+		if(arg == null) { // remove everyone from block list
+			for(String user : this.blockList) {
+				clientUI.display("Messages from "+user+" will now be displayed.");
+				this.blockList.remove(user.toLowerCase());
+				sendToServer("#removeblock "+user);
 			}
-			else{
-				if(!blockList.isEmpty()){
-					while(!blockList.isEmpty()){
-						int position = blockList.size() - 1;
-						sendToServer("#removeblock "+blockList.get(position));
-						String id = blockList.get(position);
-						blockList.remove(position);
-						clientUI.display("Messages from " +id+ " will now be displayed");
-					}
-				}
-				else{
-					clientUI.display("No blocking is in effect.");
-				}
-
-			}
+			
+		} else if(! (this.blockList.contains(arg)) ) { // asking to unblock a user that was not blocked
+			clientUI.display("Messages from "+arg+" are already displayed.");
+			
+		} else {
+			clientUI.display("Messages from "+arg+" will now be displayed.");
+			this.blockList.remove(arg.toLowerCase());
+			sendToServer("#removeblock "+arg);
 		}
-		else {
-			if(arg.equalsIgnoreCase("server") && blockList.contains("SERVER"))
-			{
-				sendToServer("#removeblock " + "SERVER");
-				blockList.remove("SERVER");
-				clientUI.display("Messages from " + arg + " will now be displayed");
-			}
-			else if(blockList.contains(arg)){
-				sendToServer("#removeblock " +arg);
-				blockList.remove(arg);
-				clientUI.display("Messages from " + arg + " will now be displayed");
-			}
-			else{
-				clientUI.display("Messages from " + arg + " were not blocked.");
-			}
-		}
-
 	}
 
 	private void setPort(String arg) {
