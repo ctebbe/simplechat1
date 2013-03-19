@@ -24,7 +24,10 @@ public class ServerConsole implements ChatIF {
 	public void display(String message) {
 		String msg = "SERVER> "+message;
 		System.out.println("SERVER> " +message);
-		server.sendToAllClients(msg);
+		try {
+			server.sendToAllClients(null, msg);
+		} catch (IOException e) {
+		}
 	}
 
 	public void accept() {
