@@ -102,7 +102,7 @@ public class ChatClient extends AbstractClient
 		String loginid = "";
 		loginid = (message.substring(0, loginidIndex));
 
-		if(blockList.contains(loginid)) {
+		if(blockList.contains(loginid.toLowerCase())) {
 			return true;
 		} else {
 			return false;
@@ -176,6 +176,15 @@ public class ChatClient extends AbstractClient
 			} else if(command.equals("#whoblocksme")) {
 				sendToServer(command);
 
+			} else if(command.equals("#setpassword")) {
+				sendToServer(command+" "+arg);
+
+			} else if(command.equals("#getpassword")) {
+				sendToServer(command);
+
+			} else if(command.equals("#password")) {
+				sendToServer(command+" "+arg);
+
 			} else if(command.equals("#notavailable")) {
 				this.status = UNAVAIL;
 
@@ -211,7 +220,7 @@ public class ChatClient extends AbstractClient
 			clientUI.display("You cannot block the sending of messages to yourself.");
 			
 		} else {
-			if(!blockList.contains(arg)){
+			if(!blockList.contains(arg.toLowerCase())){
 				blockList.add(arg.toLowerCase());
 				sendToServer("#addblock "+arg);
 			}		
@@ -223,6 +232,7 @@ public class ChatClient extends AbstractClient
 
 		if(this.blockList.isEmpty()) { // no blocks
 			clientUI.display("No blocking is in effect");
+			return;
 		}
 		
 		if(arg == null) { // remove everyone from block list
@@ -232,7 +242,7 @@ public class ChatClient extends AbstractClient
 				sendToServer("#removeblock "+user);
 			}
 			
-		} else if(! (this.blockList.contains(arg)) ) { // asking to unblock a user that was not blocked
+		} else if(! (this.blockList.contains(arg.toLowerCase())) ) { // asking to unblock a user that was not blocked
 			clientUI.display("Messages from "+arg+" are already displayed.");
 			
 		} else {
@@ -255,7 +265,7 @@ public class ChatClient extends AbstractClient
 
 	private void logoff() throws IOException {
 		closeConnection();
-		clientUI.display("Connectioned closed.");
+		clientUI.display("Logged off.");
 	}
 
 	private void changeHost(String arg) {
@@ -276,7 +286,7 @@ public class ChatClient extends AbstractClient
 	 */
 	public void connectionClosed() {
 		if(!quitOnClose()) {
-			clientUI.display("Abnormal termination of connection");
+			clientUI.display("Terminating connection");
 		}
 	}
 

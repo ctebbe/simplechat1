@@ -75,11 +75,9 @@ public class ServerConsole implements ChatIF {
 				server.removeFromServerBlockList(arg);
 			} else if(command.equals("#whoiblock")){
 				server.whoIBlock();
-			}
-			else if(command.equals("#whoblocksme")){
+			} else if(command.equals("#whoblocksme")){
 				server.whoBlocksServer();
-			}
-			else {
+			} else {
 				System.out.println("Illegal command. Use: #command <arg>");
 			}
 		} catch(Exception e) {
