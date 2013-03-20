@@ -8,6 +8,8 @@ import ocsf.client.*;
 import common.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 /**
@@ -37,6 +39,8 @@ public class ChatClient extends AbstractClient
 	 */
 	ChatIF clientUI; 
 	private boolean quitOnClose; // use this to "logoff" and not terminate the client
+	Timer timer; // used to schedule a reminder to change status after 5 mins
+	private int status; // keep track if online or idle to know when to set the timer
 	// user status codes
 	private final static int ONLINE = 0;
 	private final static int IDLE = 1;
@@ -59,6 +63,8 @@ public class ChatClient extends AbstractClient
 		this.clientUI = clientUI;
 		this.quitOnClose = false;
 		login(loginid);
+		timer = new Timer();
+		status = ONLINE;
 		//openConnection();
 	}
 
@@ -169,6 +175,35 @@ public class ChatClient extends AbstractClient
 			}
 		} catch(IOException e) {
 
+		}
+	}
+	
+	public void sendToServer(Object msg) throws IOException {
+		
+		checkStatusTimer();
+		super.sendToServer(msg);
+		status = ONLINE;
+	}
+	
+	private void checkStatusTimer() throws IOException {
+		timer.cancel(); // stop the current timer thread
+		if(status == ONLINE || status == UNAVAIL) {
+			timer.schedule(new IdleTimer(), 300*1000); // set a new reminder for 300 seconds or 5 mins
+		} 
+	}
+	
+	public void idleTimerThrown() throws IOException {
+		if(status != IDLE) {
+			super.sendToServer("#status "+IDLE);
+			status = IDLE;
+		}
+	}
+
+	class IdleTimer extends TimerTask {
+		public void run() {
+			try {
+				idleTimerThrown();
+			} catch (IOException e) {}
 		}
 	}
 
