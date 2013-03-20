@@ -41,6 +41,7 @@ public class ChatClient extends AbstractClient
 	private boolean quitOnClose; // use this to "logoff" and not terminate the client
 	Timer timer; // used to schedule a reminder to change status after 5 mins
 	private int status; // keep track if online or idle to know when to set the timer
+	private String userLoginID;
 	// user status codes
 	private final static int ONLINE = 0;
 	private final static int IDLE = 1;
@@ -62,9 +63,10 @@ public class ChatClient extends AbstractClient
 		super(host, port); //Call the superclass constructor
 		this.clientUI = clientUI;
 		this.quitOnClose = false;
+		this.timer = new Timer();
+		userLoginID = loginid;
 		login(loginid);
-		timer = new Timer();
-		status = ONLINE;
+		this.status = ONLINE;
 		//openConnection();
 	}
 
@@ -77,7 +79,7 @@ public class ChatClient extends AbstractClient
 				System.out.println("Currently connected to the server. #logoff and try again.");
 			} else {
 				openConnection();
-				sendToServer("#login "+loginid);
+				sendToServer("#login "+userLoginID);
 			}
 		} catch (IOException e) {
 			System.out.println("Cannot open connection. Awaiting command.");
@@ -170,6 +172,9 @@ public class ChatClient extends AbstractClient
 			} else if(command.equals("#password")) {
 				sendToServer(command+" "+arg);
 
+			} else if(command.equals("#status")) {
+				sendStatusToServer(arg);
+
 			} else {
 				System.out.println("Illegal command. Use: #command <arg>");
 			}
@@ -178,21 +183,48 @@ public class ChatClient extends AbstractClient
 		}
 	}
 	
+	private void sendStatusToServer(String statusString) throws IOException {
+		int status = Integer.parseInt(statusString);
+		switch(status) {
+		case ONLINE:
+			status = ONLINE;
+			sendToServer("#status "+status);
+			break;
+		case IDLE:
+			status = IDLE;
+			sendToServer("#status "+status);
+			break;
+		case UNAVAIL:
+			status = UNAVAIL;
+			sendToServer("#status "+status);
+			break;
+		case OFFLINE:
+			status = OFFLINE;
+			sendToServer("#status "+status);
+			break;
+		}
+	}
+
 	public void sendToServer(Object msg) throws IOException {
 		
+		if(status == IDLE) {
+			status = ONLINE;
+			super.sendToServer("#status "+ONLINE);
+		}
 		checkStatusTimer();
 		super.sendToServer(msg);
-		status = ONLINE;
 	}
 	
+	// cancels current timer and sets a new one
 	private void checkStatusTimer() throws IOException {
 		timer.cancel(); // stop the current timer thread
-		if(status == ONLINE || status == UNAVAIL) {
-			timer.schedule(new IdleTimer(), 300*1000); // set a new reminder for 300 seconds or 5 mins
+		timer = new Timer(); // cancel clears all schedule threads...restarting the timer to be scheduled
+		if(status == ONLINE) { // if already idle or offline dont set the timer
+			timer.schedule(new IdleTimer(), 10*1000); // set a new reminder for 300 seconds or 5 mins if not canceled before then
 		} 
 	}
 	
-	public void idleTimerThrown() throws IOException {
+	public void idleTimerActivated() throws IOException {
 		if(status != IDLE) {
 			super.sendToServer("#status "+IDLE);
 			status = IDLE;
@@ -202,7 +234,7 @@ public class ChatClient extends AbstractClient
 	class IdleTimer extends TimerTask {
 		public void run() {
 			try {
-				idleTimerThrown();
+				idleTimerActivated();
 			} catch (IOException e) {}
 		}
 	}
@@ -219,6 +251,7 @@ public class ChatClient extends AbstractClient
 	}
 
 	private void logoff() throws IOException {
+		sendStatusToServer(Integer.toString(OFFLINE));
 		closeConnection();
 		clientUI.display("Logged off.");
 	}

@@ -157,9 +157,36 @@ public class EchoServer extends AbstractServer
 				setClientPassword(client, arg);
 			} else if(command.equals("#getpassword")) {
 				getClientPassword(client);
+			} else if(command.equals("#status")) {
+				setClientStatus(client, arg);
 			}
 		} catch (IOException e) {}
 	}
+
+	private void setClientStatus(ConnectionToClient client, String arg) throws IOException {
+		
+		int clientStatus = Integer.parseInt(arg);
+		
+		switch(clientStatus) {
+		case ONLINE:
+			client.setInfo("status", ONLINE);
+			client.sendToClient("> You are now Online.");
+			break;
+		case IDLE:
+			client.setInfo("status", IDLE);
+			client.sendToClient("> You are now Idle.");
+			break;
+		case UNAVAIL:
+			client.setInfo("status", UNAVAIL);
+			client.sendToClient("> You are now Unavailable.");
+			break;
+		case OFFLINE:
+			client.setInfo("status", OFFLINE);
+			client.sendToClient("> You are now Offline.");
+			break;
+		}
+	}
+
 
 	private void getClientPassword(ConnectionToClient client) throws IOException {
 		
@@ -220,7 +247,7 @@ public class EchoServer extends AbstractServer
 		
 		client.setInfo("loginid", loginid); // store loginid
 		client.setInfo("blocklist", new ArrayList<String>()); // init a new blocklist
-		client.setInfo("status", ONLINE); // set status
+		setClientStatus(client, Integer.toString(ONLINE));
 		clientList.add(client);
 		if(!clientPasswordMap.containsKey(loginid)) { // dont override an existing password
 			clientPasswordMap.put(loginid, null);
