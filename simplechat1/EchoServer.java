@@ -158,10 +158,42 @@ public class EchoServer extends AbstractServer
 			} else if(command.equals("#getpassword")) {
 				getClientPassword(client);
 			} else if(command.equals("#status")) {
-				setClientStatus(client, arg);
+				handleClientStatus(client, arg);
 			}
 		} catch (IOException e) {}
 	}
+
+	private void handleClientStatus(ConnectionToClient client, String arg) throws IOException {
+		
+		if(clientPasswordMap.containsKey(arg)) { // client asking about a user's status
+			sendClientUserStatus(client, arg);
+		} else {
+			setClientStatus(client, arg);
+		}
+	}
+
+
+	private void sendClientUserStatus(ConnectionToClient client, String user) throws IOException {
+		ConnectionToClient c = getClient(user);
+		client.sendToClient("> User "+user+" is "+getStatusString((Integer) c.getInfo("status")));
+	}
+
+
+	private String getStatusString(Integer info) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	private ConnectionToClient getClient(String user) {
+		for(ConnectionToClient c : clientList) {
+			if(((String) c.getInfo("loginid")).equalsIgnoreCase(user)) {
+				return c;
+			}
+		}
+		return null;
+	}
+
 
 	private void setClientStatus(ConnectionToClient client, String arg) throws IOException {
 		
