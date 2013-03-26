@@ -36,6 +36,7 @@ public class EchoServer extends AbstractServer
 	private ArrayList<String> blockList; // an updated list of all server blocks
 	private ArrayList<ConnectionToClient> clientList; // an updated list of all currently connected clients
 	private HashMap<String, String> clientPasswordMap; // a hashmap to keep track of all existing users and their passwords (if any)
+	private HashMap<String, ArrayList<ConnectionToClient>> channelMap; // channel name and arraylist of clients in that channel
 	
 	//status codes
 	private final static int ONLINE = 0;
@@ -56,25 +57,88 @@ public class EchoServer extends AbstractServer
 		blockList = new ArrayList<String>();
 		clientList = new ArrayList<ConnectionToClient>();
 		clientPasswordMap = new HashMap<String, String>(); 
+		channelMap = new HashMap<String, ArrayList<ConnectionToClient>>();
 	}
 
 
 	//Instance methods ************************************************
 	
-	@SuppressWarnings("unchecked")
-	public void sendToAllClients(ConnectionToClient sender, Object msg) throws IOException { // eventually do all client block filtering here
-		
-		String senderID = null;
-		if(sender == null) {
-			senderID = "server";
-		} else { // coming from a connected client
-			senderID = ((String) sender.getInfo("loginid")).toLowerCase();
+	// returns the id of c or server if null
+	public String getLoginID(ConnectionToClient c) {
+		if(c == null) {
+			return "SERVER";
+		} else {
+			return (String) c.getInfo("loginid");
 		}
+	}
+	
+	private ConnectionToClient getClient(String user) {
+		for(ConnectionToClient c : clientList) {
+			if(((String) c.getInfo("loginid")).equalsIgnoreCase(user)) {
+				return c;
+			}
+		}
+		return null;
+	}
+	
+	private boolean checkClientMessagingStatus(ConnectionToClient c) {
+		int status = (Integer) c.getInfo("status");
+		switch(status) {
+		case ONLINE:
+			return true;
+		case IDLE:
+			return true;
+		case UNAVAIL:
+			return false;
+		case OFFLINE:
+			return false;
+		default:
+			return false;
+		}
+	}
+	
+	private String getStatusString(Integer statusCode) {
+		switch(statusCode) {
+		case ONLINE:
+			return "ONLINE";
+		case IDLE:
+			return "IDLE";
+		case UNAVAIL:
+			return "UNAVAILABLE";
+		case OFFLINE:
+			return "OFFLINE";
+		default:
+			return "";
+		}
+	}
+	
+	private void setClientStatus(ConnectionToClient client, Integer clientStatus) throws IOException {
+		
+		//int currentStatus = (Integer) client.getInfo("status"); // dont send client status change if already that status
+		switch(clientStatus) {
+		case ONLINE:
+			client.setInfo("status", ONLINE);
+			client.sendToClient("> You are now Online.");
+			break;
+		case IDLE:
+			client.setInfo("status", IDLE);
+			client.sendToClient("> You are now Idle.");
+			break;
+		case UNAVAIL:
+			client.setInfo("status", UNAVAIL);
+			client.sendToClient("> You are now Unavailable.");
+			break;
+		case OFFLINE:
+			client.setInfo("status", OFFLINE);
+			client.sendToClient("> You are now Offline.");
+			break;
+		}
+	}
+	
+	public void sendToAllClients(ConnectionToClient sender, Object msg) throws IOException { // 
 		
 		for(ConnectionToClient c : clientList) {
-			if( !(((ArrayList<String>)c.getInfo("blocklist")).contains(senderID)) ) {
-				c.sendToClient(msg);
-			}
+			checkClientToClientMessage(sender, c, (String) msg);
 		}
 		//super.sendToAllClients(msg);
 	}
@@ -96,10 +160,10 @@ public class EchoServer extends AbstractServer
 				
 			} else { // not a command
 				if(loginid != null) { // user logged in
-					if( !(blockList.contains( ((String)client.getInfo("loginid")).toLowerCase() )) ) { // check server blocklist
-						System.out.println("Message received "+ msg + " from " + client.getInfo("loginid"));
+					if( !(blockList.contains( getLoginID(client).toLowerCase() )) ) { // check server blocklist
+						System.out.println("Message received "+ msg + " from " + getLoginID(client));
 					}
-					sendToAllClients(client, loginid+"> "+msg);
+					sendToAllClients(client, msg);
 				} else { // user not logged in
 					System.out.println("Client sending message but not logged in.");
 				}
@@ -114,26 +178,39 @@ public class EchoServer extends AbstractServer
 		// pull argument from command if there is any
 		command = command.trim();
 		String arg = null;
+		String arg2 = null;
 		int argIndex = command.indexOf(' ');
 		if(argIndex != -1) {
 			arg = (command.substring(argIndex)).trim();
 			command = (command.substring(command.indexOf('#'), argIndex)).trim();
+			
+			int argIndex2 = arg.indexOf(' ');
+			if(argIndex2 != -1) {
+				arg2 = (arg.substring(argIndex2)).trim();
+				arg = (arg.substring(0, argIndex2)).trim();
+			}
 		}
 		
+		
+		
 		// print loginid if logged in or the hostname if not
-		if(isUserConnected((String) client.getInfo("loginid"))) {
-			System.out.println("Command received "+ command + " from " + client.getInfo("loginid"));
+		if(isUserConnected(client)) {
+			System.out.println("Command received "+ command + " from " + getLoginID(client));
 		} else {
 			System.out.println("Command received "+ command + " from " + client);
 		}
-		
+		/*
+		System.out.println(command);
+		System.out.println(arg);
+		System.out.println(arg2);*/
 		
 		try {
 			//if( (client.getInfo("loginid") == null) ) { // check if user has a loginid
-			if( !(isUserConnected((String) client.getInfo("loginid"))) ) { // check if user is connected and chatting or a new user
+			if( !(isUserConnected(client)) ) { // check if user is connected and chatting or a new user
 				
 				if(command.equals("#login")) { // client log in
-					handleClientLoginAttempt(client, arg, null); // handle a new login
+					//clientLogin(client, arg);
+					handleClientLoginAttempt(client, arg, arg2); // handle a new login
 				
 				} else if(command.equals("#password")) {
 					handleClientPasswordAttempt(client, arg); // handle a client attempting to enter a password
@@ -148,9 +225,9 @@ public class EchoServer extends AbstractServer
 			} else if(command.equals("#whoblocksme")) {
 				whoBlocksClient(client);
 			} else if(command.equals("#block")) {
-				addClientBlock(client, arg);
+				addBlock(client, arg);
 			} else if(command.equals("#unblock")) {
-				removeFromClientBlockList(client, arg);
+				removeFromBlockList(client, arg);
 			} else if(command.equals("#whoiblock")) {
 				whoClientBlocks(client);
 			} else if(command.equals("#setpassword")) {
@@ -158,67 +235,154 @@ public class EchoServer extends AbstractServer
 			} else if(command.equals("#getpassword")) {
 				getClientPassword(client);
 			} else if(command.equals("#status")) {
-				handleClientStatus(client, arg);
+				handleStatusCommand(client, arg);
+			} else if(command.equals("#channel")) {
+				handleChannelCommand(client, arg, arg2);
+			} else if(command.equals("#forward")) {
+				setClientForward(client, arg);
+			} else if(command.equals("#private")) {
+				sendPrivateMessage(client, arg, arg2);
 			}
-		} catch (IOException e) {}
+		} catch (IOException e) {
+			System.out.println("IOException thrown");
+		}
 	}
 
-	private void handleClientStatus(ConnectionToClient client, String arg) throws IOException {
+	private void sendPrivateMessage(ConnectionToClient sender, String user, String msg) throws IOException {
+		
+		ConnectionToClient sendee = getClient(user);
+		ConnectionToClient forwardClient = getClient( (String) sendee.getInfo("forward") );
+		
+		if(!isUserConnected(sendee)) {
+			sender.sendToClient("> Client "+user+" is not connected");
+		}
+		
+		// check blocking
+		if(!(checkBlock(sendee, sender))) { // sendee not blocking the sender
+			if(checkClientMessagingStatus(sendee)) { // online or idle
+				sendToClient(sender, sendee, "[PVT:"+getLoginID(sender)+"] "+msg);
+			} else {
+				sendClientUserStatus(sender, sendee);
+			}
+		} else {
+			sender.sendToClient("> Messages to user "+sendee+" are currently blocked");
+		}
+		
+		// check forwarding...dont care if fowarding client is blocking the message
+		if(forwardClient != null) { // sendee is forwarding messages to another client
+			if(checkClientMessagingStatus(forwardClient)) { // online or idle
+				sendToClient(sender, forwardClient, "[PVT:"+getLoginID(sender)+"] "+"[FWD:"+getLoginID(sendee)+"] "+msg);
+			}
+		}
+	}
+
+
+	private void setClientForward(ConnectionToClient client, String arg) throws IOException {
+		
+		ConnectionToClient forwardClient = getClient(arg);
+		if(checkBlock(client, forwardClient)) {
+			client.sendToClient("> Cannot add forward due to block");
+		} else if(!doesUserExist(forwardClient)) {
+			client.sendToClient("> Cannot forward to client that does not exist");
+		} else if(!isUserConnected(forwardClient)) {
+			client.sendToClient("> Cannot forward to user currently disconnected from the server");
+		} else {
+			client.setInfo("forward", arg);
+		}
+	}
+
+
+	// parses a channel command from client
+	private void handleChannelCommand(ConnectionToClient client, String channelName, String msg) throws IOException {
+		if(msg == null) { // creating a new channel or requesting to join existing channel
+			if(channelMap.containsKey(channelName)) { // join existing channel
+				channelMap.get(channelName).add(client);
+				client.sendToClient("> Joined existing channel "+channelName);
+			} else { // create a new channel
+				channelMap.put(channelName, new ArrayList<ConnectionToClient>());
+				channelMap.get(channelName).add(client);
+				client.sendToClient("> Created new channel "+channelName);
+			}
+		} else if(channelMap.containsKey(channelName) && channelMap.get(channelName).contains(client)) { // sending message to channel
+			for(ConnectionToClient c : channelMap.get(channelName)) {
+				checkClientToClientMessage(client, c, "[CHNL:"+channelName+"] "+msg);
+			}
+		} else {
+			client.sendToClient("> No access in channel");
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private boolean checkBlock(ConnectionToClient blocker, ConnectionToClient blockee) {
+		if( ((ArrayList<String>) blocker.getInfo("blocklist")).contains(getLoginID(blockee).toLowerCase()) ) {
+			return true;
+		}
+		return false;
+	}
+
+
+	// checks all aspects of a client sending a general message to another client including blocklist, forwarding list ect
+	// a null value for either client represents the server
+	private void checkClientToClientMessage(ConnectionToClient sender, ConnectionToClient sendee, String msg) throws IOException {
+		
+		ConnectionToClient forwardClient = getClient( (String) sendee.getInfo("forward") );
+		
+		// check blocking
+		if(!(checkBlock(sendee, sender))) { // sendee not blocking the sender
+			if(checkClientMessagingStatus(sendee)) { // online or idle
+				sendToClient(sender, sendee, msg);
+			} else {
+				//sendClientUserStatus(sender, sendee);
+			}
+		} 
+		
+		// check forwarding...dont care if fowarding client is blocking the message
+		if(forwardClient != null) { // sendee is forwarding messages to another client
+			if(checkClientMessagingStatus(forwardClient)) { // online or idle
+				sendToClient(sender, forwardClient, "[FWD:"+getLoginID(sendee)+"] "+msg);
+			}
+		} 
+	}
+
+	// this does not check anything, instead it contructs the proper senderID> msg format and sends it to client sendee
+	private void sendToClient(ConnectionToClient sender, ConnectionToClient sendee, Object msg) throws IOException {
+		sendee.sendToClient("> "+getLoginID(sender)+"> "+msg);
+	}
+
+
+	private void handleStatusCommand(ConnectionToClient client, String arg) throws IOException {
 		
 		if(clientPasswordMap.containsKey(arg)) { // client asking about a user's status
-			sendClientUserStatus(client, arg);
-		} else {
-			setClientStatus(client, arg);
+			sendClientUserStatus(client, getClient(arg));
+			
+		} else if(channelMap.containsKey(arg)) {
+			sendClientChannelStatus(client, arg);
+			
+		} else { // setting own status
+			setClientStatus(client, Integer.parseInt(arg));
 		}
 	}
 
 
-	private void sendClientUserStatus(ConnectionToClient client, String user) throws IOException {
-		ConnectionToClient c = getClient(user);
-		client.sendToClient("> User "+user+" is "+getStatusString((Integer) c.getInfo("status")));
-	}
-
-
-	private String getStatusString(Integer info) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-	private ConnectionToClient getClient(String user) {
-		for(ConnectionToClient c : clientList) {
-			if(((String) c.getInfo("loginid")).equalsIgnoreCase(user)) {
-				return c;
+	private void sendClientChannelStatus(ConnectionToClient client, String channelName) throws IOException {
+		if( channelMap.get(channelName).contains(client) ) { // client not in specified channel
+			for(ConnectionToClient c : channelMap.get(channelName)) {
+				sendClientUserStatus(client, c);
 			}
-		}
-		return null;
-	}
-
-
-	private void setClientStatus(ConnectionToClient client, String arg) throws IOException {
-		
-		int clientStatus = Integer.parseInt(arg);
-		
-		switch(clientStatus) {
-		case ONLINE:
-			client.setInfo("status", ONLINE);
-			client.sendToClient("> You are now Online.");
-			break;
-		case IDLE:
-			client.setInfo("status", IDLE);
-			client.sendToClient("> You are now Idle.");
-			break;
-		case UNAVAIL:
-			client.setInfo("status", UNAVAIL);
-			client.sendToClient("> You are now Unavailable.");
-			break;
-		case OFFLINE:
-			client.setInfo("status", OFFLINE);
-			client.sendToClient("> You are now Offline.");
-			break;
+		} else { // client not in channel or channel doesnt exist
+			client.sendToClient("> You do not have access to channel "+channelName);
 		}
 	}
 
+
+	private void sendClientUserStatus(ConnectionToClient client, ConnectionToClient statusToGet) throws IOException {
+
+		if(statusToGet == null) { // non-existant or offline user
+			client.sendToClient("> User "+statusToGet+" is OFFLINE.");
+		} else {
+			client.sendToClient("> User "+getLoginID(statusToGet)+" is "+getStatusString((Integer) statusToGet.getInfo("status")));
+		}
+	}
 
 	private void getClientPassword(ConnectionToClient client) throws IOException {
 		
@@ -257,7 +421,7 @@ public class EchoServer extends AbstractServer
 			loginid = (String) client.getInfo("loginid");
 		}
 		
-		if(isUserConnected(loginid)) { // user online with id already
+		if(isUserConnected(client)) { // user online with id already
 			client.sendToClient("> Loginid "+loginid+" already in use. Try #login <loginid> with a new loginid.");
 			//client.close();
 			
@@ -279,55 +443,73 @@ public class EchoServer extends AbstractServer
 		
 		client.setInfo("loginid", loginid); // store loginid
 		client.setInfo("blocklist", new ArrayList<String>()); // init a new blocklist
-		setClientStatus(client, Integer.toString(ONLINE));
+		
+		setClientStatus(client, ONLINE);
 		clientList.add(client);
 		if(!clientPasswordMap.containsKey(loginid)) { // dont override an existing password
 			clientPasswordMap.put(loginid, null);
 		}
 			
-		System.out.println(client.getInfo("loginid") +" has logged on");
-		sendToAllClients("> "+client.getInfo("loginid")+ " has logged on");
+		System.out.println(getLoginID(client) +" has logged on");
+		sendToAllClients("> "+getLoginID(client)+ " has logged on");
 	}
 
 
 	private void setClientPassword(ConnectionToClient client, String arg) throws IOException {
 		if(clientPasswordMap.containsKey(client.getInfo("loginid"))) {
 			clientPasswordMap.remove(client.getInfo("loginid")); // temporarily remove user
-			clientPasswordMap.put((String) client.getInfo("loginid"), arg); // re-add user with new password
+			clientPasswordMap.put(getLoginID(client), arg); // re-add user with new password
 			client.sendToClient("> New password successfully set.");
 		}
 	}
 
-	//Adds a block that a client requests
+	//Adds a block that a client requests or server block if client is null
 	@SuppressWarnings("unchecked")
-	private void addClientBlock(ConnectionToClient client, String blockee) throws IOException {
-		if(doesUserExist(blockee)) {
-			if( ((ArrayList<String>)client.getInfo("blocklist")).contains(blockee.toLowerCase()) ) {
-				client.sendToClient("> Messages from user "+blockee+" already blocked.");
-			} else {
-				((ArrayList<String>)client.getInfo("blocklist")).add(blockee.toLowerCase());
-				client.sendToClient("> Messages from user "+blockee+" will now be blocked.");
+	public void addBlock(ConnectionToClient client, String blockee) throws IOException {
+		
+		if(client == null) { // server block
+			if(blockee.equalsIgnoreCase("server")) {
+				System.out.println("Cannot block yourself");
+			} else if(doesUserExist(getClient(blockee))) {
+				this.blockList.add(blockee.toLowerCase());
+				System.out.println("Messages from "+blockee+" will now be blocked.");
+				
+			} else { // no command or illegal user
+				System.out.println("User does not exist.");
 			}
-		} else {
-			client.sendToClient("> Cannot block user that does not exist.");
+			
+		} else { // client block
+			if(getLoginID(client).equalsIgnoreCase(blockee)) {
+				client.sendToClient("> Cannot block yourself");
+				
+			} else if(doesUserExist(getClient(blockee)) || blockee.equalsIgnoreCase("server")) {
+				if( ((ArrayList<String>)client.getInfo("blocklist")).contains(blockee.toLowerCase()) ) {
+					client.sendToClient("> Messages from user "+blockee+" already blocked.");
+				} else {
+					((ArrayList<String>)client.getInfo("blocklist")).add(blockee.toLowerCase());
+					client.sendToClient("> Messages from user "+blockee+" will now be blocked.");
+					
+					// check if this changes any previous forwarding
+					if(((String) getClient(blockee).getInfo("forward")).equalsIgnoreCase(getLoginID(client))) {
+						setClientForward(getClient(blockee), null);
+						getClient(blockee).sendToClient("> Forwarding removed due to block");
+					}
+				}
+			} else {
+				client.sendToClient("> Cannot block user that does not exist.");
+			}
 		}
 	}
 
 	// check if a certain loginid is actively chatting through the server
-	private boolean isUserConnected(String loginid) {
-		if(loginid == null) return false;
-		for(ConnectionToClient c : this.clientList) {
-			if( ((String)c.getInfo("loginid")).equalsIgnoreCase(loginid) ) {
-				return true;
-			}
-		}
-		if(loginid.equalsIgnoreCase("server")) return true;
-		return false;
+	private boolean isUserConnected(ConnectionToClient client) {
+		return clientList.contains(client);
 	}
 	
 	// check if a certain loginid is currently chatting or has ever logged in before...server too
-	private boolean doesUserExist(String loginid) {
-		if(clientPasswordMap.containsKey(loginid) || loginid.equalsIgnoreCase("server")) {
+	// return false if not in the password map or the server
+	private boolean doesUserExist(ConnectionToClient c) {
+		if(clientPasswordMap.containsKey(getLoginID(c))) {
 			return true;
 		}
 		return false;
@@ -375,61 +557,52 @@ public class EchoServer extends AbstractServer
 	}
 
 
-	//Used by the server to block non-command messages from clients
-	public void addToServerBlockList(String arg) {
-		if(arg != null && doesUserExist(arg)) {
-			this.blockList.add(arg.toLowerCase());
-			System.out.println("Messages from "+arg+" will now be blocked.");
-			
-		} else { // no command or illegal user
-			System.out.println("User does not exist.");
-		}
-	}
-
-	//Server side unblock method
-	public void removeFromServerBlockList(String blockee){
-		if(this.blockList.isEmpty()) { // no blocks
-			System.out.println("No blocking is in effect");
-			return;
-		}
-		
-		if(blockee == null) { // remove everyone from block list
-			for(String user : this.blockList) {
-				this.blockList.remove(user.toLowerCase());
-				System.out.println("Messages from "+user+" will now be displayed.");
-			}
-			
-		} else if( !(this.blockList.contains(blockee.toLowerCase())) ) { // asking to unblock a user that was not blocked
-			System.out.println("Messages from "+blockee+" are already displayed.");
-			
-		} else {
-			this.blockList.remove(blockee.toLowerCase());
-			System.out.println("Messages from "+blockee+" will now be displayed.");
-		}
-	}
 	
-	// client remove block
+	
+	// removes block from client, if null remove block from server
 	@SuppressWarnings("unchecked")
-	private void removeFromClientBlockList(ConnectionToClient client, String blockee) throws IOException{
+	public void removeFromBlockList(ConnectionToClient client, String blockee) throws IOException{
 		
-		ArrayList<String> blockList = (ArrayList<String>) client.getInfo("blocklist");
-		if(blockList.isEmpty()) { // no blocks
-			client.sendToClient("> No blocking is in effect");
-			return;
-		}
-		
-		if(blockee == null) { // remove everyone from block list
-			for(String user : blockList) {
-				blockList.remove(user.toLowerCase());
-				client.sendToClient("> Messages from "+user+" will now be displayed.");
+		if(client == null) { // removing from server block list
+			if(this.blockList.isEmpty()) { // no blocks
+				System.out.println("No blocking is in effect");
+				return;
 			}
 			
-		} else if( !(blockList.contains(blockee.toLowerCase())) ) { // asking to unblock a user that was not blocked
-			client.sendToClient("> Messages from "+blockee+" are already displayed.");
+			if(blockee == null) { // remove everyone from block list
+				for(String user : this.blockList) {
+					this.blockList.remove(user);
+					System.out.println("Messages from "+user+" will now be displayed.");
+				}
+				
+			} else if( !(this.blockList.contains(blockee.toLowerCase())) ) { // asking to unblock a user that was not blocked
+				System.out.println("Messages from "+blockee+" are already displayed.");
+				
+			} else {
+				this.blockList.remove(blockee.toLowerCase());
+				System.out.println("Messages from "+blockee+" will now be displayed.");
+			}
 			
-		} else {
-			blockList.remove(blockee.toLowerCase());
-			client.sendToClient("> Messages from "+blockee+" will now be displayed.");
+		} else { // from user blocklist
+			ArrayList<String> blockList = (ArrayList<String>) client.getInfo("blocklist");
+			if(blockList.isEmpty()) { // no blocks
+				client.sendToClient("> No blocking is in effect");
+				return;
+			}
+			
+			if(blockee == null) { // remove everyone from block list
+				for(String user : blockList) {
+					blockList.remove(user.toLowerCase());
+					client.sendToClient("> Messages from "+user+" will now be displayed.");
+				}
+				
+			} else if( !(blockList.contains(blockee.toLowerCase())) ) { // asking to unblock a user that was not blocked
+				client.sendToClient("> Messages from "+blockee+" are already displayed.");
+				
+			} else {
+				blockList.remove(blockee.toLowerCase());
+				client.sendToClient("> Messages from "+blockee+" will now be displayed.");
+			}
 		}
 	}
 	
@@ -473,8 +646,17 @@ public class EchoServer extends AbstractServer
 	 * called when a client disconnected
 	 */
 	synchronized protected void clientDisconnected(ConnectionToClient client) {
-		if(isUserConnected((String) client.getInfo("loginid"))) {
-				sendToAllClients("> "+client.getInfo("loginid") + " has disconnected");
+		// remove any forwarding to client disconnecting
+		String id = getLoginID(client);
+		for(ConnectionToClient c : clientList) {
+			if( ((String) c.getInfo("forward")).equalsIgnoreCase(id) ) {
+				try {
+					c.sendToClient("> Fowarding stopped due to disconnection");
+				} catch (IOException e) {}
+			}
+		}
+		if(isUserConnected(client)) {
+				sendToAllClients("> "+getLoginID(client)+ " has disconnected");
 		}
 		clientList.remove(client);
 	}

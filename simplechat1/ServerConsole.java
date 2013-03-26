@@ -22,10 +22,9 @@ public class ServerConsole implements ChatIF {
 
 
 	public void display(String message) {
-		String msg = "SERVER> "+message;
 		System.out.println("SERVER> " +message);
 		try {
-			server.sendToAllClients(null, msg);
+			server.sendToAllClients(null, message);
 		} catch (IOException e) {
 		}
 	}
@@ -73,9 +72,9 @@ public class ServerConsole implements ChatIF {
 			} else if(command.equals("#getport")) {
 				getPort();
 			} else if(command.equals("#block")) {
-				server.addToServerBlockList(arg);
+				server.addBlock(null, arg);
 			} else if(command.equals("#unblock")){
-				server.removeFromServerBlockList(arg);
+				server.removeFromBlockList(null, arg);
 			} else if(command.equals("#whoiblock")){
 				server.whoIBlock();
 			} else if(command.equals("#whoblocksme")){

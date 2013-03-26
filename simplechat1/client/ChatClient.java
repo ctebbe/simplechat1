@@ -40,7 +40,7 @@ public class ChatClient extends AbstractClient
 	ChatIF clientUI; 
 	private boolean quitOnClose; // use this to "logoff" and not terminate the client
 	Timer timer; // used to schedule a reminder to change status after 5 mins
-	private int status; // keep track if online or idle to know when to set the timer
+	boolean setTimer; // use this to control the setting of timer depending if idle or not
 	private String userLoginID;
 	// user status codes
 	private final static int ONLINE = 0;
@@ -65,8 +65,8 @@ public class ChatClient extends AbstractClient
 		this.quitOnClose = false;
 		this.timer = new Timer();
 		userLoginID = loginid;
+		setTimer = true;
 		login(loginid);
-		this.status = ONLINE;
 		//openConnection();
 	}
 
@@ -122,10 +122,16 @@ public class ChatClient extends AbstractClient
 	private void handleCommandFromClientUI(String command) {
 		// pull argument from command if there is any
 		String arg = null;
+		String arg2 = null;
 		int argIndex = command.indexOf(' ');
 		if(argIndex != -1) {
 			arg = (command.substring(argIndex)).trim();
 			command = (command.substring(command.indexOf('#'), argIndex)).trim();
+			int argIndex2 = arg.indexOf(' ');
+			if(argIndex2 != -1) {
+				arg2 = (arg.substring(argIndex2)).trim();
+				arg = (arg.substring(0, argIndex2)).trim();
+			}
 		}
 
 		// parse command
@@ -172,8 +178,23 @@ public class ChatClient extends AbstractClient
 			} else if(command.equals("#password")) {
 				sendToServer(command+" "+arg);
 
+			} else if(command.equals("#channel")) {
+				if(arg2 == null) {
+					sendToServer(command+" "+arg);
+				} else {
+					sendToServer(command+" "+arg+" "+arg2);
+				}
+
 			} else if(command.equals("#status")) {
-				sendStatusToServer(arg);
+				if(!(sendStatusToServer(arg))) { // check if changing a status or inquiring about a channel/user
+					sendToServer(command+" "+arg);
+				}
+
+			} else if(command.equals("#private")) {
+				sendToServer(command+" "+arg+" "+arg2);
+
+			} else if(command.equals("#forward")) {
+				sendToServer(command+" "+arg);
 
 			} else {
 				System.out.println("Illegal command. Use: #command <arg>");
@@ -183,52 +204,46 @@ public class ChatClient extends AbstractClient
 		}
 	}
 	
-	private void sendStatusToServer(String statusString) throws IOException {
-		int status = Integer.parseInt(statusString);
-		switch(status) {
-		case ONLINE:
-			status = ONLINE;
-			sendToServer("#status "+status);
-			break;
-		case IDLE:
-			status = IDLE;
-			sendToServer("#status "+status);
-			break;
-		case UNAVAIL:
-			status = UNAVAIL;
-			sendToServer("#status "+status);
-			break;
-		case OFFLINE:
-			status = OFFLINE;
-			sendToServer("#status "+status);
-			break;
+	// changes status, if not valid status return false
+	private boolean sendStatusToServer(String statusString) throws IOException {
+		
+		if(statusString.equalsIgnoreCase("online")) {
+			//sendToServer("#status "+);
+			return true;
+		} else if(statusString.equalsIgnoreCase("idle")) {
+			//sendToServer("#status "+);
+			return true;
+		} else if(statusString.equalsIgnoreCase("unavailable")) {
+			//sendToServer("#status "+);
+			return true;
+		} else if(statusString.equalsIgnoreCase("offline")) {
+			//sendToServer("#status "+);
+			return true;
 		}
+		return false;
 	}
 
 	public void sendToServer(Object msg) throws IOException {
 		
-		if(status == IDLE) {
-			status = ONLINE;
-			super.sendToServer("#status "+ONLINE);
+		if(!setTimer) {
+			setTimer = true;
 		}
-		checkStatusTimer();
+		resetTimer();
 		super.sendToServer(msg);
 	}
 	
 	// cancels current timer and sets a new one
-	private void checkStatusTimer() throws IOException {
+	private void resetTimer() throws IOException {
 		timer.cancel(); // stop the current timer thread
 		timer = new Timer(); // cancel clears all schedule threads...restarting the timer to be scheduled
-		if(status == ONLINE) { // if already idle or offline dont set the timer
-			timer.schedule(new IdleTimer(), 10*1000); // set a new reminder for 300 seconds or 5 mins if not canceled before then
+		if(setTimer) { // if already idle or offline dont set the timer
+			timer.schedule(new IdleTimer(), 300*1000); // set a new reminder for 300 seconds or 5 mins if not canceled before then
 		} 
 	}
 	
-	public void idleTimerActivated() throws IOException {
-		if(status != IDLE) {
-			super.sendToServer("#status "+IDLE);
-			status = IDLE;
-		}
+	private void idleTimerActivated() throws IOException {
+		super.sendToServer("#status "+IDLE);
+		setTimer = false;
 	}
 
 	class IdleTimer extends TimerTask {
@@ -251,7 +266,7 @@ public class ChatClient extends AbstractClient
 	}
 
 	private void logoff() throws IOException {
-		sendStatusToServer(Integer.toString(OFFLINE));
+		sendStatusToServer("offline");
 		closeConnection();
 		clientUI.display("Logged off.");
 	}
