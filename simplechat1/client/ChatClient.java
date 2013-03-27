@@ -80,6 +80,7 @@ public class ChatClient extends AbstractClient
 			} else {
 				openConnection();
 				sendToServer("#login "+userLoginID);
+				sendStatusToServer("online");
 			}
 		} catch (IOException e) {
 			System.out.println("Cannot open connection. Awaiting command.");
@@ -178,6 +179,8 @@ public class ChatClient extends AbstractClient
 			} else if(command.equals("#password")) {
 				sendToServer(command+" "+arg);
 
+			// #channel <channelname> <- create a new or join an existing channel
+			// #channel <channelname> <msg> <- send a message to the specified channel
 			} else if(command.equals("#channel")) {
 				if(arg2 == null) {
 					sendToServer(command+" "+arg);
@@ -185,10 +188,21 @@ public class ChatClient extends AbstractClient
 					sendToServer(command+" "+arg+" "+arg2);
 				}
 
+			// #status <user> <- check current status of a user
+			// #status <channelname> <- check status of a channel you are in
+			// #status <validstatus> <- change your current status
 			} else if(command.equals("#status")) {
 				if(!(sendStatusToServer(arg))) { // check if changing a status or inquiring about a channel/user
 					sendToServer(command+" "+arg);
 				}
+
+			} else if(command.equals("#available")) {
+				sendStatusToServer("online");
+
+			} else if(command.equals("#unavailable")) {
+				sendStatusToServer("unavailable");
+				setTimer = false;
+				resetTimer();
 
 			} else if(command.equals("#private")) {
 				sendToServer(command+" "+arg+" "+arg2);
@@ -208,16 +222,16 @@ public class ChatClient extends AbstractClient
 	private boolean sendStatusToServer(String statusString) throws IOException {
 		
 		if(statusString.equalsIgnoreCase("online")) {
-			//sendToServer("#status "+);
+			sendToServer("#status "+ONLINE);
 			return true;
 		} else if(statusString.equalsIgnoreCase("idle")) {
-			//sendToServer("#status "+);
+			sendToServer("#status "+IDLE);
 			return true;
 		} else if(statusString.equalsIgnoreCase("unavailable")) {
-			//sendToServer("#status "+);
+			sendToServer("#status "+UNAVAIL);
 			return true;
 		} else if(statusString.equalsIgnoreCase("offline")) {
-			//sendToServer("#status "+);
+			sendToServer("#status "+OFFLINE);
 			return true;
 		}
 		return false;
@@ -225,25 +239,28 @@ public class ChatClient extends AbstractClient
 
 	public void sendToServer(Object msg) throws IOException {
 		
-		if(!setTimer) {
+		super.sendToServer(msg);
+		
+		if(!setTimer) { // coming back from being idle
+			//super.sendToServer("#status "+ONLINE);
 			setTimer = true;
 		}
 		resetTimer();
-		super.sendToServer(msg);
 	}
 	
 	// cancels current timer and sets a new one
 	private void resetTimer() throws IOException {
 		timer.cancel(); // stop the current timer thread
 		timer = new Timer(); // cancel clears all schedule threads...restarting the timer to be scheduled
-		if(setTimer) { // if already idle or offline dont set the timer
+		if(setTimer) { // check if need to reset the timer
 			timer.schedule(new IdleTimer(), 300*1000); // set a new reminder for 300 seconds or 5 mins if not canceled before then
 		} 
 	}
 	
 	private void idleTimerActivated() throws IOException {
-		super.sendToServer("#status "+IDLE);
 		setTimer = false;
+		//resetTimer(); // stop the current timer
+		super.sendToServer("#status "+IDLE);
 	}
 
 	class IdleTimer extends TimerTask {
@@ -267,8 +284,8 @@ public class ChatClient extends AbstractClient
 
 	private void logoff() throws IOException {
 		sendStatusToServer("offline");
-		closeConnection();
 		clientUI.display("Logged off.");
+		closeConnection();
 	}
 
 	private void changeHost(String arg) {

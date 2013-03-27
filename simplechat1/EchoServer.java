@@ -112,31 +112,37 @@ public class EchoServer extends AbstractServer
 		}
 	}
 	
-	private void setClientStatus(ConnectionToClient client, Integer clientStatus) throws IOException {
+	private boolean setClientStatus(ConnectionToClient client, Integer clientStatus) throws IOException {
 		
 		//int currentStatus = (Integer) client.getInfo("status"); // dont send client status change if already that status
 		switch(clientStatus) {
 		case ONLINE:
 			client.setInfo("status", ONLINE);
 			client.sendToClient("> You are now Online.");
-			break;
+			return true;
 		case IDLE:
 			client.setInfo("status", IDLE);
 			client.sendToClient("> You are now Idle.");
-			break;
+			return true;
 		case UNAVAIL:
 			client.setInfo("status", UNAVAIL);
 			client.sendToClient("> You are now Unavailable.");
-			break;
+			return true;
 		case OFFLINE:
 			client.setInfo("status", OFFLINE);
 			client.sendToClient("> You are now Offline.");
-			break;
+			return true;
+		//default: // ignore an invalid status
+			//client.sendToClient("> Invalid status");
 		}
+		return false;
 	}
 	
 	public void sendToAllClients(ConnectionToClient sender, Object msg) throws IOException { // 
 		
+		if((Integer) sender.getInfo("status") == IDLE) {
+			setClientStatus(sender, ONLINE);
+		}
 		for(ConnectionToClient c : clientList) {
 			checkClientToClientMessage(sender, c, (String) msg);
 		}
@@ -163,7 +169,11 @@ public class EchoServer extends AbstractServer
 					if( !(blockList.contains( getLoginID(client).toLowerCase() )) ) { // check server blocklist
 						System.out.println("Message received "+ msg + " from " + getLoginID(client));
 					}
-					sendToAllClients(client, msg);
+					if(!checkClientMessagingStatus(client)) {
+						client.sendToClient("> You are currently unavailable. Try #available and resend.");
+					} else {
+						sendToAllClients(client, msg);
+					}
 				} else { // user not logged in
 					System.out.println("Client sending message but not logged in.");
 				}
@@ -288,14 +298,18 @@ public class EchoServer extends AbstractServer
 			client.sendToClient("> Cannot forward to user currently disconnected from the server");
 		} else {
 			client.setInfo("forward", arg);
+			client.sendToClient("> Set forwarding to:"+arg);
 		}
 	}
 
 
 	// parses a channel command from client
 	private void handleChannelCommand(ConnectionToClient client, String channelName, String msg) throws IOException {
+			
 		if(msg == null) { // creating a new channel or requesting to join existing channel
-			if(channelMap.containsKey(channelName)) { // join existing channel
+			if(!this.checkClientMessagingStatus(client)) { // check if client is available
+				client.sendToClient("> You are currently unavailable. Try #available and resend");
+			} else if(channelMap.containsKey(channelName)) { // join existing channel
 				channelMap.get(channelName).add(client);
 				client.sendToClient("> Joined existing channel "+channelName);
 			} else { // create a new channel
@@ -329,7 +343,7 @@ public class EchoServer extends AbstractServer
 		
 		// check blocking
 		if(!(checkBlock(sendee, sender))) { // sendee not blocking the sender
-			if(checkClientMessagingStatus(sendee)) { // online or idle
+			if(checkClientMessagingStatus(sendee) || sender == null) { // send client a server message even if unavailable
 				sendToClient(sender, sendee, msg);
 			} else {
 				//sendClientUserStatus(sender, sendee);
@@ -338,7 +352,7 @@ public class EchoServer extends AbstractServer
 		
 		// check forwarding...dont care if fowarding client is blocking the message
 		if(forwardClient != null) { // sendee is forwarding messages to another client
-			if(checkClientMessagingStatus(forwardClient)) { // online or idle
+			if(!forwardClient.equals(sender) && checkClientMessagingStatus(forwardClient)) { // dont forward a message from the same client / check status
 				sendToClient(sender, forwardClient, "[FWD:"+getLoginID(sendee)+"] "+msg);
 			}
 		} 
@@ -359,7 +373,9 @@ public class EchoServer extends AbstractServer
 			sendClientChannelStatus(client, arg);
 			
 		} else { // setting own status
-			setClientStatus(client, Integer.parseInt(arg));
+			if(!setClientStatus(client, Integer.parseInt(arg))) {
+				client.sendToClient("> Not a valid user or channel");
+			}
 		}
 	}
 
@@ -444,7 +460,7 @@ public class EchoServer extends AbstractServer
 		client.setInfo("loginid", loginid); // store loginid
 		client.setInfo("blocklist", new ArrayList<String>()); // init a new blocklist
 		
-		setClientStatus(client, ONLINE);
+		//setClientStatus(client, ONLINE);
 		clientList.add(client);
 		if(!clientPasswordMap.containsKey(loginid)) { // dont override an existing password
 			clientPasswordMap.put(loginid, null);
