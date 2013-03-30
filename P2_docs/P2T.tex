@@ -85,6 +85,7 @@ Test to see if clients can create and join channels to send messages through the
 \item Hit CTRL+C to kill any remaining clients/servers \dots
 \end{enumerate}
 
+
 % test case 3
 \section{Testcase D1003}
 \begin{itemize}
@@ -178,4 +179,87 @@ and later use \emph{\#available} to get messages again.
 \begin{enumerate}
 \item Hit CTRL+C to kill any remaining clients/servers \dots
 \end{enumerate}
+
+% test case 5
+\section{Testcase D1005}
+\begin{itemize}
+\item System: SimpleChat
+\item Phase: 3
+\item Description: Test client blocking feature.
+\end{itemize}
+
+\subsection*{Rationale}
+Test to see if clients can block messages from other clients/server.
+
+\subsection*{Instructions}
+\begin{enumerate}
+\item Start server
+\item Start a client logged in as test
+\item Start a client logged in as test2
+\item Start a client logged in as test3
+\item Run client command from test: ``\#channel newchan''
+\item Run client command from test2: ``\#channel newchan''
+\item Run client command from test2: ``\#channel newchan test message''
+\item Run client command from test2: ``\#private newchan test private message''
+\item Send server message: ``test server message''
+\item Run client command from test: ``\#block test2''
+\item Run client command from test: ``\#block server''
+\item Run client command from test2: ``\#channel newchan test channel message 2''
+\item Run client command from test2: ``\#private test test private message 2''
+\item Send server message: ``test server message 2''
+\end{enumerate}
+
+\subsection*{Expected Results}
+\begin{enumerate}
+\item Client test will create channel \emph{newchan}
+\item Client test2 will join existing channel \emph{newchan}
+\item Client test will receive channel message ``test message''
+\item Client test will receive private message ``test message''
+\item Client test will receive server message ``test server message''
+\item Client test will block user \emph{test2}
+\item Client test will \textbf{not} receive channel message ``test channel message 2''
+\item Client test will \textbf{not} receive private message ``test private message 2''
+\item Client test will \textbf{not} receive server message ``test server message 2''
+\item Client test3 will only see server messages
+\end{enumerate}
+
+\subsection*{Clean up}
+\begin{enumerate}
+\item Hit CTRL+C to kill any remaining clients/servers \dots
+\end{enumerate}
+
+
+% test case 6
+\section{Testcase D1006}
+\begin{itemize}
+\item System: SimpleChat
+\item Phase: 3
+\item Description: Test server blocking feature.
+\end{itemize}
+
+\subsection*{Rationale}
+Test to see if server can block messages from clients.
+
+\subsection*{Instructions}
+\begin{enumerate}
+\item Start server
+\item Start a client logged in as test
+\item Send client message: ``test message''
+\item Run server command: ``\#block test''
+\item Send client message: ``test message 2''
+\end{enumerate}
+
+\subsection*{Expected Results}
+\begin{enumerate}
+\item Server will receive client message ``test message''
+\item Server will block client \emph{test}
+\item Server will \textbf{not} receive client message ``test message 2''
+\end{enumerate}
+
+\subsection*{Clean up}
+\begin{enumerate}
+\item Hit CTRL+C to kill any remaining clients/servers \dots
+\end{enumerate}
+
+
 \end{document}
