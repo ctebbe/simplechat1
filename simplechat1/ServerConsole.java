@@ -2,6 +2,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import ocsf.server.ConnectionToClient;
+
 import common.ChatIF;
 
 /**
@@ -43,17 +45,25 @@ public class ServerConsole implements ChatIF {
 				}
 			}
 		} catch (Exception ex) {
-			System.out.println("Unexpected error while reading from console!");
+			//System.out.println("Unexpected error while reading from console!");
 		}
 	}
 
 	private void handleServerCommand(String command) {
 		// pull argument from command if there is any
+		command = command.trim();
 		String arg = null;
+		String arg2 = null;
 		int argIndex = command.indexOf(' ');
 		if(argIndex != -1) {
 			arg = (command.substring(argIndex)).trim();
 			command = (command.substring(command.indexOf('#'), argIndex)).trim();
+				
+			int argIndex2 = arg.indexOf(' ');
+			if(argIndex2 != -1) {
+				arg2 = (arg.substring(argIndex2)).trim();
+				arg = (arg.substring(0, argIndex2)).trim();
+			}
 		}
 		try {
 			// parse command

@@ -259,7 +259,7 @@ public class ChatClient extends AbstractClient
 	
 	private void idleTimerActivated() throws IOException {
 		setTimer = false;
-		//resetTimer(); // stop the current timer
+		resetTimer(); // stop the current timer
 		super.sendToServer("#status "+IDLE);
 	}
 

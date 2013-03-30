@@ -117,8 +117,10 @@ public class EchoServer extends AbstractServer
 		//int currentStatus = (Integer) client.getInfo("status"); // dont send client status change if already that status
 		switch(clientStatus) {
 		case ONLINE:
-			client.setInfo("status", ONLINE);
-			client.sendToClient("> You are now Online.");
+			//if( !(currentStatus == ONLINE) ) {
+				client.setInfo("status", ONLINE);
+				client.sendToClient("> You are now Online.");
+			//}
 			return true;
 		case IDLE:
 			client.setInfo("status", IDLE);
@@ -140,7 +142,7 @@ public class EchoServer extends AbstractServer
 	
 	public void sendToAllClients(ConnectionToClient sender, Object msg) throws IOException { // 
 		
-		if((Integer) sender.getInfo("status") == IDLE) {
+		if(sender != null && (Integer) sender.getInfo("status") == IDLE) {
 			setClientStatus(sender, ONLINE);
 		}
 		for(ConnectionToClient c : clientList) {
@@ -253,6 +255,9 @@ public class EchoServer extends AbstractServer
 			} else if(command.equals("#private")) {
 				sendPrivateMessage(client, arg, arg2);
 			}
+			if((Integer) client.getInfo("status") == IDLE) {
+				setClientStatus(client, ONLINE);
+			}
 		} catch (IOException e) {
 			System.out.println("IOException thrown");
 		}
@@ -275,7 +280,7 @@ public class EchoServer extends AbstractServer
 				sendClientUserStatus(sender, sendee);
 			}
 		} else {
-			sender.sendToClient("> Messages to user "+sendee+" are currently blocked");
+			sender.sendToClient("> Messages to user "+getLoginID(sender)+" are currently blocked");
 		}
 		
 		// check forwarding...dont care if fowarding client is blocking the message
@@ -304,8 +309,9 @@ public class EchoServer extends AbstractServer
 
 
 	// parses a channel command from client
-	private void handleChannelCommand(ConnectionToClient client, String channelName, String msg) throws IOException {
+	public void handleChannelCommand(ConnectionToClient client, String channelName, String msg) throws IOException {
 			
+		String loginid = getLoginID(client);
 		if(msg == null) { // creating a new channel or requesting to join existing channel
 			if(!this.checkClientMessagingStatus(client)) { // check if client is available
 				client.sendToClient("> You are currently unavailable. Try #available and resend");
@@ -317,7 +323,7 @@ public class EchoServer extends AbstractServer
 				channelMap.get(channelName).add(client);
 				client.sendToClient("> Created new channel "+channelName);
 			}
-		} else if(channelMap.containsKey(channelName) && channelMap.get(channelName).contains(client)) { // sending message to channel
+		} else if(channelMap.containsKey(channelName) && channelMap.get(channelName).contains(client) || loginid.equalsIgnoreCase("server")) { // sending message to channel
 			for(ConnectionToClient c : channelMap.get(channelName)) {
 				checkClientToClientMessage(client, c, "[CHNL:"+channelName+"] "+msg);
 			}
@@ -348,7 +354,9 @@ public class EchoServer extends AbstractServer
 			} else {
 				//sendClientUserStatus(sender, sendee);
 			}
-		} 
+		} else {
+			System.out.println("blocked...");
+		}
 		
 		// check forwarding...dont care if fowarding client is blocking the message
 		if(forwardClient != null) { // sendee is forwarding messages to another client
