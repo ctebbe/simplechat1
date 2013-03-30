@@ -18,6 +18,7 @@
 
 
 % new test case, section automatically increments numbers
+% test case 1
 \section{Testcase D1001}
 \begin{itemize}
 \item System: SimpleChat
@@ -29,7 +30,6 @@
 \subsection*{Rationale}
 Test to see if a client has the ability to send a private message to another connected client.
 
-
 \subsection*{Instructions}
 \begin{enumerate}
 \item Start server
@@ -39,19 +39,143 @@ Test to see if a client has the ability to send a private message to another con
 \item Use command ``\#private test2 test message'' from client test
 \end{enumerate}
 
-
 \subsection*{Expected Results}
 \begin{enumerate}
-\item Client test2 will recieve private message ``test message''
+\item Client test2 will receive private message ``test message''
 \item Client test3 will not see any messages
 \end{enumerate}
-
 
 \subsection*{Clean up}
 \begin{enumerate}
 \item Hit CTRL+C to kill any remaining clients/servers \dots
 \end{enumerate}
 
-% start new test case here
+% test case 2
+\section{Testcase D1002}
+\begin{itemize}
+\item System: SimpleChat
+\item Phase: 3
+\item Description: Test creation and use of individual channels.
+\end{itemize}
 
+\subsection*{Rationale}
+Test to see if clients can create and join channels to send messages through the channel.
+
+\subsection*{Instructions}
+\begin{enumerate}
+\item Start server
+\item Start a client logged in as test
+\item Start a client logged in as test2
+\item Start a client logged in as test3
+\item Run client command from test: ``\#channel newchan''
+\item Run client command from test2: ``\#channel newchan''
+\item Run client command from test2: ``\#channel newchan test message''
+\end{enumerate}
+
+\subsection*{Expected Results}
+\begin{enumerate}
+\item Client test will create channel \emph{newchan}
+\item Client test2 will join existing channel \emph{newchan}
+\item Client test will receive channel message ``test message''
+\item Client test3 will not see any messages
+\end{enumerate}
+
+\subsection*{Clean up}
+\begin{enumerate}
+\item Hit CTRL+C to kill any remaining clients/servers \dots
+\end{enumerate}
+
+% test case 3
+\section{Testcase D1003}
+\begin{itemize}
+\item System: SimpleChat
+\item Phase: 3
+\item Description: Test client forwarding functionality.
+\end{itemize}
+
+\subsection*{Rationale}
+Test to see if client can set up forwarding to another client. Forwarding should override any client blocking or channel restrictions by the receiving client.
+
+\subsection*{Instructions}
+\begin{enumerate}
+\item Start server
+\item Start a client logged in as test
+\item Start a client logged in as test2
+\item Start a client logged in as test3
+\item Run client command from test: ``\#channel newchan''
+\item Run client command from test2: ``\#channel newchan''
+\item Run client command from test3: ``\#block test2''
+\item Run client command from test: ``\#forward test2''
+\item Run client command from test2: ``\#channel newchan test channel message''
+\item Run client command from test2: ``\#private test test private message''
+\end{enumerate}
+
+\subsection*{Expected Results}
+\begin{enumerate}
+\item Client test will create channel \emph{newchan}
+\item Client test2 will join existing channel \emph{newchan}
+\item Client test3 will block \emph{test2}
+\item Client test will start forwarding to \emph{test2}
+\item Client test will receive channel message ``test channel message''
+\item Client test will receive private message ``test private message''
+\item Client test3 will receive forwarded channel message ``test channel message''
+\item Client test3 will receive forwarded private message ``test private message''
+\end{enumerate}
+
+\subsection*{Clean up}
+\begin{enumerate}
+\item Hit CTRL+C to kill any remaining clients/servers \dots
+\end{enumerate}
+
+% test case 4
+\section{Testcase D1004}
+\begin{itemize}
+\item System: SimpleChat
+\item Phase: 3
+\item Description: Test client available/unavailable functionality.
+\end{itemize}
+
+\subsection*{Rationale}
+Test to see if a client can become \emph{\#unavailable} to ignore any messages
+and later use \emph{\#available} to get messages again.
+
+\subsection*{Instructions}
+\begin{enumerate}
+\item Start server
+\item Start a client logged in as test
+\item Start a client logged in as test2
+\item Start a client logged in as test3
+\item Run client command from test: ``\#channel newchan''
+\item Run client command from test2: ``\#channel newchan''
+\item Run client command from test2: ``\#channel newchan test channel message''
+\item Run client command from test2: ``\#private newchan test private message''
+\item Run client command from test: ``\#unavailable''
+\item Run client command from test2: ``\#channel newchan test channel message 2''
+\item Run client command from test2: ``\#private test test private message 2''
+\item Run client command from test: ``\#available''
+\item Run client command from test2: ``\#channel newchan test channel message 3''
+\item Run client command from test2: ``\#private test test private message 3''
+\end{enumerate}
+
+\subsection*{Expected Results}
+\begin{enumerate}
+\item Client test will create channel \emph{newchan}
+\item Client test2 will join existing channel \emph{newchan}
+\item Client test3 will block \emph{test2}
+\item Client test will receive channel message ``test channel message''
+\item Client test will receive private message ``test private message''
+\item Client test will become \emph{unavailable}
+\item Client test will \textbf{not} receive channel message ``test channel message 2''
+\item Client test will \textbf{not} receive private message ``test private message 2''
+\item Client test2 will receive message ``Client test is unavailable''
+\item Client test will become \emph{available}
+\item Client test will receive channel message ``test channel message 3''
+\item Client test will receive private message ``test private message 3''
+\item Client test3 will not receive any messages
+\end{enumerate}
+
+\subsection*{Clean up}
+\begin{enumerate}
+\item Hit CTRL+C to kill any remaining clients/servers \dots
+\end{enumerate}
 \end{document}
