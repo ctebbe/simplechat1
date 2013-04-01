@@ -261,5 +261,34 @@ Test to see if server can block messages from clients.
 \item Hit CTRL+C to kill any remaining clients/servers \dots
 \end{enumerate}
 
+% test case 7
+\section{Testcase D1007}
+\begin{itemize}
+\item System: SimpleChat
+\item Phase: 3
+\item Description: Test impostor detection.
+\end{itemize}
+
+\subsection*{Rationale}
+Test to see if server can detect multiple users signing in with the same login-id
+
+\subsection*{Instructions}
+\begin{enumerate}
+\item Start server
+\item Start a client logged in as client1
+\item Start a client logged in as client1
+\end{enumerate}
+
+\subsection*{Expected Results}
+\begin{enumerate}
+\item Server will respond with an error that there is an existing client with loginID 'client1'
+\item Server will notify the client that is attempting to connect that the ID 'client1' is already in use
+\end{enumerate}
+
+\subsection*{Clean up}
+\begin{enumerate}
+\item Hit CTRL+C to kill any remaining clients/servers \dots
+\end{enumerate}
+
 
 \end{document}
