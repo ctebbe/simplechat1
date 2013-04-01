@@ -316,8 +316,13 @@ public class EchoServer extends AbstractServer
 			if(!this.checkClientMessagingStatus(client)) { // check if client is available
 				client.sendToClient("> You are currently unavailable. Try #available and resend");
 			} else if(channelMap.containsKey(channelName)) { // join existing channel
+				if(!channelMap.get(channelName).contains(client)){//if not already a member of channel
 				channelMap.get(channelName).add(client);
 				client.sendToClient("> Joined existing channel "+channelName);
+				}
+				else{//already a memmber of channel
+					client.sendToClient("> You are already a member of "+channelName);
+				}
 			} else { // create a new channel
 				channelMap.put(channelName, new ArrayList<ConnectionToClient>());
 				channelMap.get(channelName).add(client);

@@ -199,7 +199,7 @@ public class ChatClient extends AbstractClient
 			} else if(command.equals("#available")) {
 				sendStatusToServer("online");
 
-			} else if(command.equals("#unavailable")) {
+			} else if(command.equals("#notavailable")) {
 				sendStatusToServer("unavailable");
 				setTimer = false;
 				resetTimer();
