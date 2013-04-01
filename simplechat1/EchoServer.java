@@ -224,10 +224,14 @@ public class EchoServer extends AbstractServer
 					//clientLogin(client, arg);
 					handleClientLoginAttempt(client, arg, arg2); // handle a new login
 				
-				} else if(command.equals("#password")) {
+				} 
+				/*
+				else if(command.equals("#password")) {
 					handleClientPasswordAttempt(client, arg); // handle a client attempting to enter a password
 					
-				} else { // client requesting server use without logging in
+				} 
+				*/
+				else { // client requesting server use without logging in
 					System.out.println("Command recieved from client but not logged in.");
 					client.sendToClient("> Must be logged in. Try #login <loginid>.");
 					//client.close();
@@ -424,9 +428,10 @@ public class EchoServer extends AbstractServer
 	}
 
 
+	/*
 	private void handleClientPasswordAttempt(ConnectionToClient client, String pw) throws IOException {
 		
-		System.out.println("Checking password attempt..."+pw);
+		//System.out.println("Checking password attempt..."+pw);
 		if(pw == null) {
 			client.sendToClient("> Enter Password: #password <password>");
 			return;
@@ -442,19 +447,22 @@ public class EchoServer extends AbstractServer
 			}
 		} 
 	}
+	*/
 
 
 	private void handleClientLoginAttempt(ConnectionToClient client, String loginid, String password) throws IOException {
+		// password system is incomplete and commented out...
 		
 		if(loginid == null) {
 			loginid = (String) client.getInfo("loginid");
 		}
 		
-		if(isUserConnected(client)) { // user online with id already
+		if(isUserConnected(client)) { // user online with id already...avoid imposter use
 			client.sendToClient("> Loginid "+loginid+" already in use. Try #login <loginid> with a new loginid.");
 			//client.close();
-			
-		} else if(clientPasswordMap.containsKey(loginid)) { // new client connection of existing client
+		} 
+		/*
+		else if(clientPasswordMap.containsKey(loginid)) { // new client connection of existing client
 			if(clientPasswordMap.get(loginid).equals(password)) { // password hit
 				clientLogin(client, loginid);
 			} else {
@@ -462,7 +470,9 @@ public class EchoServer extends AbstractServer
 				client.sendToClient("> Enter Password: #password <password>");
 			}
 			
-		} else { // brand new user to the server
+		}
+		*/ 
+		else { // brand new user to the server
 			clientLogin(client, loginid);
 		}
 	}
