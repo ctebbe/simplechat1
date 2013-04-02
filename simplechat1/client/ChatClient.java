@@ -7,7 +7,6 @@ package client;
 import ocsf.client.*;
 import common.*;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -284,8 +283,8 @@ public class ChatClient extends AbstractClient
 
 	private void logoff() throws IOException {
 		sendStatusToServer("offline");
-		//clientUI.display("Logged off.");
 		super.closeConnection();
+		clientUI.display("Logged off.");
 	}
 
 	private void changeHost(String arg) {

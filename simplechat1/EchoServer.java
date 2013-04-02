@@ -133,14 +133,27 @@ public class EchoServer extends AbstractServer
 			client.sendToClient("> You are now Unavailable.");
 			return true;
 		case OFFLINE:
+			client.sendToClient("> You are now Offline.");
 			client.setInfo("status", OFFLINE);
-			clientDisconnected(client);
+			removeFromClientList(client);
+			
 			
 			return true;
 		//default: // ignore an invalid status
 			//client.sendToClient("> Invalid status");
 		}
 		return false;
+	}
+	
+	//Searches client list for specific ID and removes client from client list with that ID
+	private void removeFromClientList(ConnectionToClient client){
+		String clientID = (String) client.getInfo("loginid");
+		for(int i = 0; i < clientList.size(); i++){
+			if(clientList.get(i).getInfo("loginid").equals(clientID)){
+				clientList.remove(i);
+				clientPasswordMap.remove(getLoginID(client));
+			}
+		}
 	}
 	
 	public void sendToAllClients(ConnectionToClient sender, Object msg) throws IOException { // 
@@ -635,30 +648,19 @@ public class EchoServer extends AbstractServer
 		// remove any forwarding to client disconnecting
 		String id = getLoginID(client);
 		
-		try {
-			client.sendToClient("> " + "You are now Offline.");
-		} catch (IOException e) {
-		}
-		
 		//This seems to be keeping a client from fully disconnecting
 
-		/*for(ConnectionToClient c : clientList) {
+		for(ConnectionToClient c : clientList) {
 			if( ((String) c.getInfo("forward")).equalsIgnoreCase(id) ) {
 				try {
 					c.sendToClient("> Fowarding stopped due to disconnection");
 				} catch (IOException e) {}
 			}
-		}*/
+		}
 		
 		if(isUserConnected(client)) {
 				sendToAllClients("> "+getLoginID(client)+ " has disconnected");
 
-		}
-		for(int i = 0; i < clientList.size(); i++){
-			if(clientList.get(i).getInfo("loginid").equals(id)){
-				clientList.remove(i);
-				clientPasswordMap.remove(getLoginID(client));
-			}
 		}
 		//clientList.remove(client);
 
