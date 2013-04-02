@@ -37,6 +37,7 @@ public class EchoServer extends AbstractServer
 	private ArrayList<ConnectionToClient> clientList; // an updated list of all currently connected clients
 	private HashMap<String, String> clientPasswordMap; // a hashmap to keep track of all existing users and their passwords (if any)
 	private HashMap<String, ArrayList<ConnectionToClient>> channelMap; // channel name and arraylist of clients in that channel
+	private ArrayList<String> usernameList; //list for user names, probably a temp fix
 	
 	//status codes
 	private final static int ONLINE = 0;
@@ -58,6 +59,7 @@ public class EchoServer extends AbstractServer
 		clientList = new ArrayList<ConnectionToClient>();
 		clientPasswordMap = new HashMap<String, String>(); 
 		channelMap = new HashMap<String, ArrayList<ConnectionToClient>>();
+		usernameList = new ArrayList<String>();
 	}
 
 
@@ -284,7 +286,7 @@ public class EchoServer extends AbstractServer
 				sendClientUserStatus(sender, sendee);
 			}
 		} else {
-			sender.sendToClient("> Messages to user "+getLoginID(sender)+" are currently blocked");
+			sender.sendToClient("> Messages to user "+getLoginID(sendee)+" are currently blocked");
 		}
 		
 		// check forwarding...dont care if fowarding client is blocking the message
@@ -457,7 +459,7 @@ public class EchoServer extends AbstractServer
 			loginid = (String) client.getInfo("loginid");
 		}
 		
-		if(isUserConnected(client)) { // user online with id already...avoid imposter use
+		if(usernameList.contains(loginid)) { // user online with id already...avoid imposter use
 			client.sendToClient("> Loginid "+loginid+" already in use. Try #login <loginid> with a new loginid.");
 			//client.close();
 		} 
@@ -485,10 +487,10 @@ public class EchoServer extends AbstractServer
 		
 		//setClientStatus(client, ONLINE);
 		clientList.add(client);
+		usernameList.add(loginid);
 		if(!clientPasswordMap.containsKey(loginid)) { // dont override an existing password
 			clientPasswordMap.put(loginid, null);
 		}
-			
 		System.out.println(getLoginID(client) +" has logged on");
 		sendToAllClients("> "+getLoginID(client)+ " has logged on");
 	}
@@ -696,8 +698,11 @@ public class EchoServer extends AbstractServer
 		}
 		if(isUserConnected(client)) {
 				sendToAllClients("> "+getLoginID(client)+ " has disconnected");
+				usernameList.remove(getLoginID(client));
+				System.out.println("Removing " + getLoginID(client) + " from username list");
 		}
 		clientList.remove(client);
+		clientPasswordMap.remove(getLoginID(client));
 	}
 
 	/**
