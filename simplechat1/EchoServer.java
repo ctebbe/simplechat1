@@ -37,7 +37,7 @@ public class EchoServer extends AbstractServer
 	private ArrayList<ConnectionToClient> clientList; // an updated list of all currently connected clients
 	private HashMap<String, String> clientPasswordMap; // a hashmap to keep track of all existing users and their passwords (if any)
 	private HashMap<String, ArrayList<ConnectionToClient>> channelMap; // channel name and arraylist of clients in that channel
-	private ArrayList<String> usernameList; //list for user names, probably a temp fix
+	//private ArrayList<String> usernameList; //list for user names, probably a temp fix
 	
 	//status codes
 	private final static int ONLINE = 0;
@@ -59,7 +59,7 @@ public class EchoServer extends AbstractServer
 		clientList = new ArrayList<ConnectionToClient>();
 		clientPasswordMap = new HashMap<String, String>(); 
 		channelMap = new HashMap<String, ArrayList<ConnectionToClient>>();
-		usernameList = new ArrayList<String>();
+		//usernameList = new ArrayList<String>();
 	}
 
 
@@ -226,14 +226,7 @@ public class EchoServer extends AbstractServer
 					//clientLogin(client, arg);
 					handleClientLoginAttempt(client, arg, arg2); // handle a new login
 				
-				} 
-				/*
-				else if(command.equals("#password")) {
-					handleClientPasswordAttempt(client, arg); // handle a client attempting to enter a password
-					
-				} 
-				*/
-				else { // client requesting server use without logging in
+				} else { // client requesting server use without logging in
 					System.out.println("Command recieved from client but not logged in.");
 					client.sendToClient("> Must be logged in. Try #login <loginid>.");
 					//client.close();
@@ -248,10 +241,6 @@ public class EchoServer extends AbstractServer
 				removeFromBlockList(client, arg);
 			} else if(command.equals("#whoiblock")) {
 				whoClientBlocks(client);
-			} else if(command.equals("#setpassword")) {
-				setClientPassword(client, arg);
-			} else if(command.equals("#getpassword")) {
-				getClientPassword(client);
 			} else if(command.equals("#status")) {
 				handleStatusCommand(client, arg);
 			} else if(command.equals("#channel")) {
@@ -419,65 +408,29 @@ public class EchoServer extends AbstractServer
 		}
 	}
 
-	private void getClientPassword(ConnectionToClient client) throws IOException {
-		
-		String password = clientPasswordMap.get((String) client.getInfo("loginid"));
-		if(password != null) {
-			client.sendToClient("> Password: "+password);
-		} else {
-			client.sendToClient("> No password set.");
-		}
-	}
-
-
-	/*
-	private void handleClientPasswordAttempt(ConnectionToClient client, String pw) throws IOException {
-		
-		//System.out.println("Checking password attempt..."+pw);
-		if(pw == null) {
-			client.sendToClient("> Enter Password: #password <password>");
-			return;
-		} 
-		
-		String loginid = (String) client.getInfo("loginid");
-		if(clientPasswordMap.containsKey(loginid)) {
-			//System.out.println("Checking password attempt:"+pw+" with "+clientPasswordMap.get(loginid));
-			if(clientPasswordMap.get(loginid).equals(pw)) {
-				clientLogin(client, loginid); // allow the client to log in
-			} else { // bad password...let them keep trying
-				client.sendToClient("> Enter Password: #password <password>");
-			}
-		} 
-	}
-	*/
-
-
 	private void handleClientLoginAttempt(ConnectionToClient client, String loginid, String password) throws IOException {
-		// password system is incomplete and commented out...
 		
 		if(loginid == null) {
 			loginid = (String) client.getInfo("loginid");
 		}
 		
-		if(usernameList.contains(loginid)) { // user online with id already...avoid imposter use
+		if(isLoginIDInUse(loginid)) { // user online with id already...avoid imposter use
 			client.sendToClient("> Loginid "+loginid+" already in use. Try #login <loginid> with a new loginid.");
 			//client.close();
-		} 
-		/*
-		else if(clientPasswordMap.containsKey(loginid)) { // new client connection of existing client
-			if(clientPasswordMap.get(loginid).equals(password)) { // password hit
-				clientLogin(client, loginid);
-			} else {
-				client.setInfo("loginid", loginid); // put this in the client reference temporarily to use when getting the password back
-				client.sendToClient("> Enter Password: #password <password>");
-			}
-			
-		}
-		*/ 
-		else { // brand new user to the server
+		} else { // brand new user to the server
 			clientLogin(client, loginid);
 		}
 	}
+
+	private boolean isLoginIDInUse(String loginid) {
+		for(ConnectionToClient c : clientList) {
+			if( ((String)c.getInfo("loginid")).equals(loginid) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 	// logs in a new or existing client
 	private void clientLogin(ConnectionToClient client, String loginid) throws IOException {
@@ -487,21 +440,12 @@ public class EchoServer extends AbstractServer
 		
 		//setClientStatus(client, ONLINE);
 		clientList.add(client);
-		usernameList.add(loginid);
+		//usernameList.add(loginid);
 		if(!clientPasswordMap.containsKey(loginid)) { // dont override an existing password
 			clientPasswordMap.put(loginid, null);
 		}
 		System.out.println(getLoginID(client) +" has logged on");
 		sendToAllClients("> "+getLoginID(client)+ " has logged on");
-	}
-
-
-	private void setClientPassword(ConnectionToClient client, String arg) throws IOException {
-		if(clientPasswordMap.containsKey(client.getInfo("loginid"))) {
-			clientPasswordMap.remove(client.getInfo("loginid")); // temporarily remove user
-			clientPasswordMap.put(getLoginID(client), arg); // re-add user with new password
-			client.sendToClient("> New password successfully set.");
-		}
 	}
 
 	//Adds a block that a client requests or server block if client is null
@@ -698,7 +642,7 @@ public class EchoServer extends AbstractServer
 		}
 		if(isUserConnected(client)) {
 				sendToAllClients("> "+getLoginID(client)+ " has disconnected");
-				usernameList.remove(getLoginID(client));
+				//usernameList.remove(getLoginID(client));
 				System.out.println("Removing " + getLoginID(client) + " from username list");
 		}
 		clientList.remove(client);

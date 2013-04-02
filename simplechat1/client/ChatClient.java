@@ -284,8 +284,8 @@ public class ChatClient extends AbstractClient
 
 	private void logoff() throws IOException {
 		sendStatusToServer("offline");
-		clientUI.display("Logged off.");
-		closeConnection();
+		//clientUI.display("Logged off.");
+		super.closeConnection();
 	}
 
 	private void changeHost(String arg) {

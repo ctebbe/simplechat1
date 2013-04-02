@@ -15,7 +15,7 @@ import common.ChatIF;
  */
 public class ServerConsole implements ChatIF {
 
-	private static final int DEFAULT_PORT = 5555;
+	private static final int DEFAULT_PORT = 5556;
 	EchoServer server;
 	
 	public ServerConsole(EchoServer echoServer) {
@@ -49,6 +49,7 @@ public class ServerConsole implements ChatIF {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private void handleServerCommand(String command) {
 		// pull argument from command if there is any
 		command = command.trim();
