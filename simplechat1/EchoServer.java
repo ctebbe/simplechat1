@@ -134,7 +134,8 @@ public class EchoServer extends AbstractServer
 			return true;
 		case OFFLINE:
 			client.setInfo("status", OFFLINE);
-			client.sendToClient("> You are now Offline.");
+			clientDisconnected(client);
+			
 			return true;
 		//default: // ignore an invalid status
 			//client.sendToClient("> Invalid status");
@@ -633,20 +634,34 @@ public class EchoServer extends AbstractServer
 	synchronized protected void clientDisconnected(ConnectionToClient client) {
 		// remove any forwarding to client disconnecting
 		String id = getLoginID(client);
-		for(ConnectionToClient c : clientList) {
+		
+		try {
+			client.sendToClient("> " + "You are now Offline.");
+		} catch (IOException e) {
+		}
+		
+		//This seems to be keeping a client from fully disconnecting
+
+		/*for(ConnectionToClient c : clientList) {
 			if( ((String) c.getInfo("forward")).equalsIgnoreCase(id) ) {
 				try {
 					c.sendToClient("> Fowarding stopped due to disconnection");
 				} catch (IOException e) {}
 			}
-		}
+		}*/
+		
 		if(isUserConnected(client)) {
 				sendToAllClients("> "+getLoginID(client)+ " has disconnected");
-				//usernameList.remove(getLoginID(client));
-				System.out.println("Removing " + getLoginID(client) + " from username list");
+
 		}
-		clientList.remove(client);
-		clientPasswordMap.remove(getLoginID(client));
+		for(int i = 0; i < clientList.size(); i++){
+			if(clientList.get(i).getInfo("loginid").equals(id)){
+				clientList.remove(i);
+				clientPasswordMap.remove(getLoginID(client));
+			}
+		}
+		//clientList.remove(client);
+
 	}
 
 	/**
