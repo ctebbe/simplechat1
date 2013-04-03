@@ -84,6 +84,8 @@ public class EchoServer extends AbstractServer
 	}
 	
 	private boolean checkClientMessagingStatus(ConnectionToClient c) {
+		
+		//if(c == null) return false;
 		int status = (Integer) c.getInfo("status");
 		switch(status) {
 		case ONLINE:
@@ -151,7 +153,7 @@ public class EchoServer extends AbstractServer
 		for(int i = 0; i < clientList.size(); i++){
 			if(clientList.get(i).getInfo("loginid").equals(clientID)){
 				clientList.remove(i);
-				clientPasswordMap.remove(getLoginID(client));
+				//clientPasswordMap.remove(getLoginID(client));
 			}
 		}
 	}
@@ -279,6 +281,7 @@ public class EchoServer extends AbstractServer
 		
 		if(!isUserConnected(sendee)) {
 			sender.sendToClient("> Client "+user+" is not connected");
+			//return;
 		}
 		
 		// check blocking
@@ -286,7 +289,7 @@ public class EchoServer extends AbstractServer
 			if(checkClientMessagingStatus(sendee)) { // online or idle
 				sendToClient(sender, sendee, "[PVT:"+getLoginID(sender)+"] "+msg);
 			} else {
-				sendClientUserStatus(sender, sendee);
+				sendClientUserStatus(sender, sendee, user);
 			}
 		} else {
 			sender.sendToClient("> Messages to user "+getLoginID(sendee)+" are currently blocked");
@@ -389,7 +392,7 @@ public class EchoServer extends AbstractServer
 	private void handleStatusCommand(ConnectionToClient client, String arg) throws IOException {
 		
 		if(clientPasswordMap.containsKey(arg)) { // client asking about a user's status
-			sendClientUserStatus(client, getClient(arg));
+			sendClientUserStatus(client, getClient(arg), arg);
 			
 		} else if(channelMap.containsKey(arg)) {
 			sendClientChannelStatus(client, arg);
@@ -405,7 +408,7 @@ public class EchoServer extends AbstractServer
 	private void sendClientChannelStatus(ConnectionToClient client, String channelName) throws IOException {
 		if( channelMap.get(channelName).contains(client) ) { // client not in specified channel
 			for(ConnectionToClient c : channelMap.get(channelName)) {
-				sendClientUserStatus(client, c);
+				sendClientUserStatus(client, c, null);
 			}
 		} else { // client not in channel or channel doesnt exist
 			client.sendToClient("> You do not have access to channel "+channelName);
@@ -413,10 +416,10 @@ public class EchoServer extends AbstractServer
 	}
 
 
-	private void sendClientUserStatus(ConnectionToClient client, ConnectionToClient statusToGet) throws IOException {
+	private void sendClientUserStatus(ConnectionToClient client, ConnectionToClient statusToGet, String loginID) throws IOException {
 
 		if(statusToGet == null) { // non-existant or offline user
-			client.sendToClient("> User "+statusToGet+" is OFFLINE.");
+			client.sendToClient("> User "+loginID+" is OFFLINE.");
 		} else {
 			client.sendToClient("> User "+getLoginID(statusToGet)+" is "+getStatusString((Integer) statusToGet.getInfo("status")));
 		}
@@ -505,7 +508,7 @@ public class EchoServer extends AbstractServer
 		return clientList.contains(client);
 	}
 	
-	// check if a certain loginid is currently chatting or has ever logged in before...server too
+	// check if a certain loginid is currently chatting or has ever logged in before...
 	// return false if not in the password map or the server
 	private boolean doesUserExist(ConnectionToClient c) {
 		if(clientPasswordMap.containsKey(getLoginID(c))) {
@@ -646,23 +649,27 @@ public class EchoServer extends AbstractServer
 	 */
 	synchronized protected void clientDisconnected(ConnectionToClient client) {
 		// remove any forwarding to client disconnecting
-		String id = getLoginID(client);
+		//String id = getLoginID(client);
 		
 		//This seems to be keeping a client from fully disconnecting
 
+		/*
 		for(ConnectionToClient c : clientList) {
 			if( ((String) c.getInfo("forward")).equalsIgnoreCase(id) ) {
 				try {
 					c.sendToClient("> Fowarding stopped due to disconnection");
 				} catch (IOException e) {}
 			}
-		}
+		}*/
 		
 		if(isUserConnected(client)) {
 				sendToAllClients("> "+getLoginID(client)+ " has disconnected");
 
 		}
-		//clientList.remove(client);
+		
+		
+		
+		clientList.remove(client);
 
 	}
 
