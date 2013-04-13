@@ -4,19 +4,28 @@
  */
 public class ClientGUI extends javax.swing.JFrame {
 
-    /**
+	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	/**
-     * Creates new form ClientGUI
-     */
+	private javax.swing.JButton btnBlock;
+    private javax.swing.JButton btnChannel;
+    private javax.swing.JButton btnSend;
+    private javax.swing.JButton btnStatus;
+    private javax.swing.JComboBox cbActorList;
+    private javax.swing.JComboBox cbStatus;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblUserName;
+    private javax.swing.JTextArea txtDisplay;
+    private javax.swing.JTextField txtEditable;
+    
     public ClientGUI() {
         initComponents();
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
@@ -45,18 +54,43 @@ public class ClientGUI extends javax.swing.JFrame {
         lblUserName.setText("jLabel2");
 
         cbStatus.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "AVAILABLE", "NOT AVAILABLE" }));
+        cbStatus.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cbStatusItemStateChanged(evt);
+            }
+        });
 
         txtEditable.setText("jTextField1");
 
         btnSend.setText("Send");
+        btnSend.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSendActionPerformed(evt);
+            }
+        });
 
-        cbActorList.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cbActorList.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Send To All", "Server", "Item 3", "Item 4" }));
 
         btnBlock.setText("Block");
+        btnBlock.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBlockActionPerformed(evt);
+            }
+        });
 
         btnChannel.setText("Join Channel");
+        btnChannel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnChannelActionPerformed(evt);
+            }
+        });
 
         btnStatus.setText("Status");
+        btnStatus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnStatusActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -130,12 +164,31 @@ public class ClientGUI extends javax.swing.JFrame {
         pack();
     }// </editor-fold>                        
 
+    private void btnSendActionPerformed(java.awt.event.ActionEvent evt) {                                        
+        System.out.println("send button hit");
+    }                                       
+
+    private void cbStatusItemStateChanged(java.awt.event.ItemEvent evt) {                                          
+    	System.out.println("status change event");
+    }                                         
+
+    private void btnChannelActionPerformed(java.awt.event.ActionEvent evt) {                                           
+    	System.out.println("channel button hit");
+    }                                          
+
+    private void btnBlockActionPerformed(java.awt.event.ActionEvent evt) {                                         
+    	System.out.println("block button hit");
+    }                                        
+
+    private void btnStatusActionPerformed(java.awt.event.ActionEvent evt) {                                          
+    	System.out.println("status button hit");
+    }                                         
+
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
          */
@@ -155,7 +208,6 @@ public class ClientGUI extends javax.swing.JFrame {
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(ClientGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -164,18 +216,4 @@ public class ClientGUI extends javax.swing.JFrame {
             }
         });
     }
-    // Variables declaration - do not modify                     
-    private javax.swing.JButton btnBlock;
-    private javax.swing.JButton btnChannel;
-    private javax.swing.JButton btnSend;
-    private javax.swing.JButton btnStatus;
-    private javax.swing.JComboBox cbActorList;
-    private javax.swing.JComboBox cbStatus;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JLabel lblUserName;
-    private javax.swing.JTextArea txtDisplay;
-    private javax.swing.JTextField txtEditable;
-    // End of variables declaration                   
 }
