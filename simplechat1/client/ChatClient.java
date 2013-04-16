@@ -7,6 +7,8 @@ package client;
 import ocsf.client.*;
 import common.*;
 import java.io.*;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -28,7 +30,7 @@ import java.util.TimerTask;
  * @version March 2013
  *
  */
-public class ChatClient extends AbstractClient
+public class ChatClient implements Observer
 {
 	//Instance variables **********************************************
 
@@ -46,6 +48,8 @@ public class ChatClient extends AbstractClient
 	private final static int IDLE = 1;
 	private final static int UNAVAIL = 2;
 	private final static int OFFLINE = 3;
+	
+	private ObservableClient obsClient;
 
 	//Constructors ****************************************************
 
@@ -57,9 +61,11 @@ public class ChatClient extends AbstractClient
 	 * @param clientUI The interface type variable.
 	 */
 
-	public ChatClient(String host, int port, ChatIF clientUI, String loginid) throws IOException 
+	public ChatClient(String host, int port, ChatIF clientUI, String loginid, ObservableClient observable) throws IOException 
 	{
-		super(host, port); //Call the superclass constructor
+		obsClient = observable;
+		obsClient.addObserver(this);
+		//super(host, port); //Call the superclass constructor
 		this.clientUI = clientUI;
 		this.quitOnClose = false;
 		this.timer = new Timer();
@@ -74,10 +80,10 @@ public class ChatClient extends AbstractClient
 
 	private void login(String loginid) {
 		try {
-			if(isConnected()) {
+			if(obsClient.isConnected()) {
 				System.out.println("Currently connected to the server. #logoff and try again.");
 			} else {
-				openConnection();
+				obsClient.openConnection();
 				sendToServer("#login "+userLoginID);
 				sendStatusToServer("online");
 			}
@@ -152,10 +158,10 @@ public class ChatClient extends AbstractClient
 				login(arg);
 
 			} else if(command.equals("#gethost")) {
-				clientUI.display("Current host: "+getHost());
+				clientUI.display("Current host: "+obsClient.getHost());
 
 			} else if(command.equals("#getport")) {
-				clientUI.display("Current port: "+getPort());
+				clientUI.display("Current port: "+obsClient.getPort());
 
 			} else if(command.equals("#block")) {
 				sendToServer(command+" "+arg);
@@ -238,7 +244,7 @@ public class ChatClient extends AbstractClient
 
 	public void sendToServer(Object msg) throws IOException {
 		
-		super.sendToServer(msg);
+		obsClient.sendToServer(msg);
 		
 		if(!setTimer) { // coming back from being idle
 			//super.sendToServer("#status "+ONLINE);
@@ -259,7 +265,7 @@ public class ChatClient extends AbstractClient
 	private void idleTimerActivated() throws IOException {
 		setTimer = false;
 		resetTimer(); // stop the current timer
-		super.sendToServer("#status "+IDLE);
+		obsClient.sendToServer("#status "+IDLE);
 	}
 
 	class IdleTimer extends TimerTask {
@@ -271,29 +277,29 @@ public class ChatClient extends AbstractClient
 	}
 
 	private void setPort(String arg) {
-		if(isConnected()) {
+		if(obsClient.isConnected()) {
 			clientUI.display("Must disconnect from server. Use #logoff and try again.");
 		} else if(arg == null) {
 			clientUI.display("No port argument. Use: #setport <port>");
 		} else {
-			setPort(Integer.parseInt(arg));
+			obsClient.setPort(Integer.parseInt(arg));
 			clientUI.display("Port set to: " + arg);
 		}
 	}
 
 	private void logoff() throws IOException {
 		sendStatusToServer("offline");
-		super.closeConnection();
+		obsClient.closeConnection();
 		clientUI.display("Logged off.");
 	}
 
 	private void changeHost(String arg) {
-		if(isConnected()) {
+		if(obsClient.isConnected()) {
 			clientUI.display("Must disconnect from server. Use #logoff and try again.");
 		} else if(arg == null) {
 			clientUI.display("No host argument. Use: #sethost <host>");
 		} else {
-			setHost(arg);
+			obsClient.setHost(arg);
 			clientUI.display("Host set to: " + arg);
 		}
 	}
@@ -317,7 +323,7 @@ public class ChatClient extends AbstractClient
 		System.out.println("Terminating client...");
 		try
 		{
-			closeConnection();
+			obsClient.closeConnection();
 		}
 		catch(IOException e) {
 			System.exit(0);
@@ -331,6 +337,12 @@ public class ChatClient extends AbstractClient
 
 	private boolean quitOnClose() {
 		return quitOnClose;
+	}
+
+
+	@Override
+	public void update(Observable o, Object msg) {
+		clientUI.display(msg.toString());
 	}
 }
 //End of ChatClient class

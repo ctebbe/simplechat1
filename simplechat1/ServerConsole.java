@@ -2,6 +2,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import ocsf.server.ObservableOriginatorServer;
+import ocsf.server.ObservableServer;
+
 import common.ChatIF;
 
 /**
@@ -13,11 +16,17 @@ import common.ChatIF;
  */
 public class ServerConsole implements ChatIF {
 
-	private static final int DEFAULT_PORT = 5556;
+	private static final int DEFAULT_PORT = 5555;
 	EchoServer server;
 	
-	public ServerConsole(EchoServer echoServer) {
-		this.server = echoServer;
+	public ServerConsole(int port) {
+		ObservableOriginatorServer obsServer = new ObservableOriginatorServer(port);
+		this.server = new EchoServer(this, obsServer);
+		try {
+			obsServer.listen();
+		} catch(IOException ex) {
+			System.out.println("Error - Couldnt listen for clients");
+		}
 	}
 
 
@@ -68,18 +77,6 @@ public class ServerConsole implements ChatIF {
 			// parse command
 			if(command.equals("#quit")) {
 				quit();
-			} else if(command.equals("#stop")) {
-				display("WARNING - The server has stopped listening for connection");
-				stop();
-			} else if(command.equals("#close")) {
-				display("WARNING - Server is shutting down!");
-				close();
-			} else if(command.equals("#setport")) {
-				setPort(Integer.parseInt(arg));
-			} else if(command.equals("#start")) {
-				start();
-			} else if(command.equals("#getport")) {
-				getPort();
 			} else if(command.equals("#block")) {
 				server.addBlock(null, arg);
 			} else if(command.equals("#unblock")){
@@ -89,42 +86,13 @@ public class ServerConsole implements ChatIF {
 			} else if(command.equals("#whoblocksme")){
 				server.whoBlocksServer();
 			} else {
-				System.out.println("Illegal command. Use: #command <arg>");
+				server.serverCommand(command, arg);
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.out.println("Error reading from server console.");
 		}
 		
-	}
-
-	private void getPort() {
-		System.out.println("Current port: "+server.getPort());
-	}
-
-	private void start() throws IOException {
-		if(server.isListening()) {
-			System.out.println("Server must be closed. Use #close and try again.");
-		} else {
-			server.listen();
-		}
-	}
-
-	private void setPort(int port) {
-		if(server.isListening()) {
-			System.out.println("Server must be closed. Use #close and try again.");
-		} else {
-			server.setPort(port);
-			System.out.println("Port set to: " + port);
-		}
-	}
-
-	private void close() throws IOException {
-		server.close();
-	}
-
-	private void stop() {
-		server.stopListening();
 	}
 
 	private void quit() throws IOException {
@@ -145,18 +113,8 @@ public class ServerConsole implements ChatIF {
 	      port = DEFAULT_PORT; //Set port to 5555
 	    }
 		
-	    EchoServer sv = new EchoServer(port);
-	    ServerConsole server = new ServerConsole(sv);
-	    
-	    try 
-	    {
-	      sv.listen(); //Start listening for connections
-	    } 
-	    catch (Exception ex) 
-	    {
-	      System.out.println("ERROR - Could not listen for clients on specified port, shutting down!");
-	      System.exit(1);
-	    }
+	    //EchoServer sv = new EchoServer(port);
+	    ServerConsole server = new ServerConsole(port);
 	    server.accept();
 	  }
 }

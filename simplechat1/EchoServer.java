@@ -12,6 +12,11 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Observable;
+import java.util.Observer;
+
+import common.ChatIF;
+
 import ocsf.server.*;
 
 /**
@@ -25,7 +30,7 @@ import ocsf.server.*;
  * @version July 2000
  * 
  */
-public class EchoServer extends AbstractServer 
+public class EchoServer implements Observer
 {
 	//Class variables *************************************************
 
@@ -38,6 +43,8 @@ public class EchoServer extends AbstractServer
 	private HashMap<String, String> clientPasswordMap; // a hashmap to keep track of all existing users and their passwords (if any)
 	private HashMap<String, ArrayList<ConnectionToClient>> channelMap; // channel name and arraylist of clients in that channel
 	//private ArrayList<String> usernameList; //list for user names, probably a temp fix
+	private ChatIF serverUI;
+	private ObservableOriginatorServer obsServer;
 	
 	//status codes
 	private final static int ONLINE = 0;
@@ -52,9 +59,12 @@ public class EchoServer extends AbstractServer
 	 *
 	 * @param port The port number to connect on.
 	 */
-	public EchoServer(int port) 
+	public EchoServer(ChatIF serverUI, ObservableOriginatorServer oos) 
 	{
-		super(port);
+		//super(port);
+		obsServer = oos;
+		obsServer.addObserver(this);
+		this.serverUI = serverUI;
 		blockList = new ArrayList<String>();
 		clientList = new ArrayList<ConnectionToClient>();
 		clientPasswordMap = new HashMap<String, String>(); 
@@ -65,6 +75,8 @@ public class EchoServer extends AbstractServer
 
 	//Instance methods ************************************************
 	
+
+
 	// returns the id of c or server if null
 	public String getLoginID(ConnectionToClient c) {
 		if(c == null) {
@@ -462,7 +474,7 @@ public class EchoServer extends AbstractServer
 			clientPasswordMap.put(loginid, null);
 		}
 		System.out.println(getLoginID(client) +" has logged on");
-		sendToAllClients("> "+getLoginID(client)+ " has logged on");
+		obsServer.sendToAllClients("> "+getLoginID(client)+ " has logged on");
 	}
 
 	//Adds a block that a client requests or server block if client is null
@@ -663,7 +675,7 @@ public class EchoServer extends AbstractServer
 		}*/
 		
 		if(isUserConnected(client)) {
-				sendToAllClients("> "+getLoginID(client)+ " has disconnected");
+			obsServer.sendToAllClients("> "+getLoginID(client)+ " has disconnected");
 
 		}
 		
@@ -680,7 +692,7 @@ public class EchoServer extends AbstractServer
 	protected void serverStarted()
 	{
 		System.out.println
-		("Server listening for connections on port " + getPort());
+		("Server listening for connections on port " + obsServer.getPort());
 	}
 
 	/**
@@ -692,44 +704,70 @@ public class EchoServer extends AbstractServer
 		System.out.println
 		("Server has stopped listening for connections.");
 	}
+	
+	private void getPort() {
+		System.out.println("Current port: "+obsServer.getPort());
+	}
+
+	private void start() throws IOException {
+		if((obsServer.isListening())) {
+			System.out.println("Server must be closed. Use #close and try again.");
+		} else {
+			obsServer.listen();
+		}
+	}
+
+	private void setPort(int port) {
+		if(obsServer.isListening()) {
+			System.out.println("Server must be closed. Use #close and try again.");
+		} else {
+			obsServer.setPort(port);
+			System.out.println("Port set to: " + port);
+		}
+	}
+
+	private void close() throws IOException {
+		obsServer.close();
+	}
+
+	private void stop() {
+		obsServer.stopListening();
+	}
 
 
 
 	//Class methods ***************************************************
 
-	/**
-	 * This method is responsible for the creation of 
-	 * the server instance (there is no UI in this phase).
-	 *
-	 * @param args[0] The port number to listen on.  Defaults to 5555 
-	 *          if no argument is entered.
-	 */
-	public static void main(String[] args) 
-	{
-		int port = 0; //Port to listen on
-
-		try
-		{
-			port = Integer.parseInt(args[0]); //Get port from command line
+	@Override
+	public void update(Observable o, Object obj) {
+		if(obj != null) {
+			OriginatorMessage oMsg = (OriginatorMessage) obj;
+			String msg = (String) oMsg.getMessage();
+			if(msg.startsWith("#OS:")) { // message from server
+				System.out.println(msg);
+				return;
+			}
+			// otherwise a client update
+			ConnectionToClient client = oMsg.getOriginator();
+			handleMessageFromClient(msg, client);
 		}
-		catch(Throwable t)
-		{
-			port = DEFAULT_PORT; //Set port to 5555
-		}
+	}
 
-		EchoServer sv = new EchoServer(port);
-		ServerConsole server = new ServerConsole(sv);
 
-		try 
-		{
-			sv.listen(); //Start listening for connections
-		} 
-		catch (Exception ex) 
-		{
-			System.out.println("ERROR: Port occupied! Could not listen for clients! Terminating...");
-			System.exit(1);
+	public void serverCommand(String command, String arg) throws IOException {
+		if(command.equals("#stop")) {
+			System.out.println("WARNING - The server has stopped listening for connection");
+			stop();
+		} else if(command.equals("#close")) {
+			System.out.println("WARNING - Server is shutting down!");
+			close();
+		} else if(command.equals("#setport")) {
+			setPort(Integer.parseInt(arg));
+		} else if(command.equals("#start")) {
+			start();
+		} else if(command.equals("#getport")) {
+			getPort();
 		}
-		server.accept();
 	}
 }
 //End of EchoServer class

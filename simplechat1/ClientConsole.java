@@ -10,6 +10,8 @@
  */
 
 import java.io.*;
+
+import ocsf.client.ObservableClient;
 import client.*;
 import common.*;
 
@@ -29,7 +31,7 @@ public class ClientConsole implements ChatIF {
 	/**
 	 * The default port to connect on.
 	 */
-	final public static int DEFAULT_PORT = 5556;
+	final public static int DEFAULT_PORT = 5555;
 
 	// Instance variables **********************************************
 
@@ -50,7 +52,8 @@ public class ClientConsole implements ChatIF {
 	 */
 	public ClientConsole(String host, int port, String loginid) {
 		try {
-			client = new ChatClient(host, port, this, loginid);
+			ObservableClient oc = new ObservableClient(host, port);
+			client = new ChatClient(host, port, this, loginid, oc);
 		} catch (IOException exception) {
 			System.out.println("Error: Can't setup connection!"
 					+ " Terminating client.");
