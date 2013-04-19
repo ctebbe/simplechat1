@@ -340,7 +340,6 @@ public class ChatClient implements Observer
 	}
 
 
-	@Override
 	public void update(Observable o, Object msg) {
 		clientUI.display(msg.toString());
 	}

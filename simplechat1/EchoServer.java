@@ -43,6 +43,7 @@ public class EchoServer implements Observer
 	private HashMap<String, String> clientPasswordMap; // a hashmap to keep track of all existing users and their passwords (if any)
 	private HashMap<String, ArrayList<ConnectionToClient>> channelMap; // channel name and arraylist of clients in that channel
 	//private ArrayList<String> usernameList; //list for user names, probably a temp fix
+	@SuppressWarnings("unused")
 	private ChatIF serverUI;
 	private ObservableOriginatorServer obsServer;
 	
@@ -738,7 +739,6 @@ public class EchoServer implements Observer
 
 	//Class methods ***************************************************
 
-	@Override
 	public void update(Observable o, Object obj) {
 		if(obj != null) {
 			OriginatorMessage oMsg = (OriginatorMessage) obj;
