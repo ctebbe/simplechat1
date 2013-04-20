@@ -2,7 +2,7 @@
  *
  * @author caleb
  */
-public class ClientGUI extends javax.swing.JFrame imlements ChatIF {
+public class ClientGUI extends javax.swing.JFrame {
 
 	/**
 	 * 
@@ -20,17 +20,9 @@ public class ClientGUI extends javax.swing.JFrame imlements ChatIF {
     private javax.swing.JLabel lblUserName;
     private javax.swing.JTextArea txtDisplay;
     private javax.swing.JTextField txtEditable;
-    private List messageList = new List();
     
-    public ClientGUI(String host, String port, String loginid) {
-    	super("Simple Chat");
+    public ClientGUI() {
         initComponents();
-        lblUserName.setText(loginid);
-    }
-    
-    public void display(String message) {
-    	messageList.add(message);
-    	messageList.makeVisible(messageList.getItemCount()-1);
     }
 
     @SuppressWarnings("unchecked")
@@ -100,7 +92,6 @@ public class ClientGUI extends javax.swing.JFrame imlements ChatIF {
             }
         });
 
-        // generated layout from netbeans
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -171,7 +162,7 @@ public class ClientGUI extends javax.swing.JFrame imlements ChatIF {
         );
 
         pack();
-    }                       
+    }// </editor-fold>                        
 
     private void btnSendActionPerformed(java.awt.event.ActionEvent evt) {                                        
         System.out.println("send button hit");
@@ -197,35 +188,9 @@ public class ClientGUI extends javax.swing.JFrame imlements ChatIF {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-    	
-    	String host = "";
-		String loginid = "";
-		int port = 0; // The port number
-		
-		try {
-			loginid = args[0];
-		} catch (ArrayIndexOutOfBoundsException e) {
-			System.out.println("ERROR - No login ID specified. Connection aborted");
-			System.exit(0);
-		}
-
-		try {
-			host = args[1];
-		} catch (ArrayIndexOutOfBoundsException e) {
-			host = "localhost";
-		}
-		
-		try {
-			port = Integer.parseInt(args[2]);
-		} catch (ArrayIndexOutOfBoundsException e) {
-			port = DEFAULT_PORT;
-		}
-		ClientGUI chat = new ClientUI(host, port, loginid);
-		
-    	
         /* Set the Nimbus look and feel */
-        /* If Nimbus is not available, stay with the default look and feel.
-         * http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -250,7 +215,5 @@ public class ClientGUI extends javax.swing.JFrame imlements ChatIF {
                 new ClientGUI().setVisible(true);
             }
         });
-        
-        chat.accept(); // Wait for client data
     }
 }
