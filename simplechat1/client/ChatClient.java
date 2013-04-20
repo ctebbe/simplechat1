@@ -287,7 +287,7 @@ public class ChatClient implements Observer
 		}
 	}
 
-	private void logoff() throws IOException {
+	public void logoff() throws IOException {
 		sendStatusToServer("offline");
 		obsClient.closeConnection();
 		clientUI.display("Logged off.");

@@ -1,42 +1,86 @@
+import java.io.IOException;
+
+import common.ChatIF;
+
+import ocsf.client.ObservableClient;
+import client.ChatClient;
+
 /**
  *
  * @author caleb
  */
-public class ClientGUI extends javax.swing.JFrame {
+public class ClientGUI extends javax.swing.JFrame implements ChatIF {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private javax.swing.JButton btnBlock;
     private javax.swing.JButton btnChannel;
     private javax.swing.JButton btnSend;
     private javax.swing.JButton btnStatus;
-    private javax.swing.JComboBox cbActorList;
-    private javax.swing.JComboBox cbStatus;
+    private javax.swing.JComboBox<String> cbStatus;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblUserName;
     private javax.swing.JTextArea txtDisplay;
     private javax.swing.JTextField txtEditable;
-    
-    public ClientGUI() {
-        initComponents();
-    }
+	final public static int DEFAULT_PORT = 5555;
+	ChatClient client;
 
-    @SuppressWarnings("unchecked")
-    private void initComponents() {
+	public ClientGUI(String host, int port, String loginid) {
+		
+		initLookAndFeel();
+        initComponents(loginid);
+        
+        try {
+			ObservableClient oc = new ObservableClient(host, port);
+			client = new ChatClient(host, port, this, loginid, oc);
+		} catch (IOException exception) {
+			System.out.println("Error: Can't setup connection!"
+					+ " Terminating client.");
+			System.exit(1);
+		}
+        this.setVisible(true);
+    }
+	
+	private void initLookAndFeel() {
+		/* Set the Nimbus look and feel */
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(ClientGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(ClientGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(ClientGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(ClientGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+	}
+
+	@Override
+	public void display(String message) {
+		txtDisplay.append(message+"\n");
+		txtDisplay.setCaretPosition(txtDisplay.getDocument().getLength()); // scroll to bottom of new text
+	}
+
+    private void initComponents(String loginid) {
 
         jPanel1 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         txtDisplay = new javax.swing.JTextArea();
         jLabel1 = new javax.swing.JLabel();
         lblUserName = new javax.swing.JLabel();
-        cbStatus = new javax.swing.JComboBox();
+        cbStatus = new javax.swing.JComboBox<String>();
         txtEditable = new javax.swing.JTextField();
         btnSend = new javax.swing.JButton();
-        cbActorList = new javax.swing.JComboBox();
         btnBlock = new javax.swing.JButton();
         btnChannel = new javax.swing.JButton();
         btnStatus = new javax.swing.JButton();
@@ -51,16 +95,16 @@ public class ClientGUI extends javax.swing.JFrame {
 
         jLabel1.setText("Logged in as:");
 
-        lblUserName.setText("jLabel2");
+        lblUserName.setText(loginid);
 
-        cbStatus.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "AVAILABLE", "NOT AVAILABLE" }));
-        cbStatus.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                cbStatusItemStateChanged(evt);
+        cbStatus.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "AVAILABLE", "NOT AVAILABLE" }));
+        cbStatus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbStatusActionPerformed(evt);
             }
         });
 
-        txtEditable.setText("jTextField1");
+        txtEditable.setText("");
 
         btnSend.setText("Send");
         btnSend.addActionListener(new java.awt.event.ActionListener() {
@@ -68,8 +112,6 @@ public class ClientGUI extends javax.swing.JFrame {
                 btnSendActionPerformed(evt);
             }
         });
-
-        cbActorList.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Send To All", "Server", "Item 3", "Item 4" }));
 
         btnBlock.setText("Block");
         btnBlock.addActionListener(new java.awt.event.ActionListener() {
@@ -112,8 +154,6 @@ public class ClientGUI extends javax.swing.JFrame {
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addComponent(btnSend, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGroup(jPanel1Layout.createSequentialGroup()
-                            .addComponent(cbActorList, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addComponent(btnChannel)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addComponent(btnBlock)
@@ -137,7 +177,6 @@ public class ClientGUI extends javax.swing.JFrame {
                     .addComponent(txtEditable))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cbActorList, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnBlock)
                     .addComponent(btnChannel)
                     .addComponent(btnStatus))
@@ -162,58 +201,69 @@ public class ClientGUI extends javax.swing.JFrame {
         );
 
         pack();
-    }// </editor-fold>                        
+    }
+
+    private void accept() {
+		
+	}
+    
+	private void send(String message) {
+		client.handleMessageFromClientUI(message);
+		txtEditable.setText("");
+	}
 
     private void btnSendActionPerformed(java.awt.event.ActionEvent evt) {                                        
-        System.out.println("send button hit");
+        send(txtEditable.getText());
     }                                       
 
-    private void cbStatusItemStateChanged(java.awt.event.ItemEvent evt) {                                          
-    	System.out.println("status change event");
+    private void cbStatusActionPerformed(java.awt.event.ActionEvent evt) {                                   
+    	if(cbStatus.getSelectedIndex() == 0) {
+    		send("#available");
+    	} else {
+    		send("#notavailable");
+    	}
     }                                         
 
     private void btnChannelActionPerformed(java.awt.event.ActionEvent evt) {                                           
-    	System.out.println("channel button hit");
+    	send("#channel " + txtEditable.getText());
     }                                          
 
     private void btnBlockActionPerformed(java.awt.event.ActionEvent evt) {                                         
-    	System.out.println("block button hit");
+    	send("#block " + txtEditable.getText());
     }                                        
 
     private void btnStatusActionPerformed(java.awt.event.ActionEvent evt) {                                          
-    	System.out.println("status button hit");
+    	send("#status " + txtEditable.getText());
     }                                         
 
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ClientGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ClientGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ClientGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ClientGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
+        
+        String host = "";
+		String loginid = "";
+		int port = 0; // The port number
+		
+		try {
+			loginid = args[0];
+		} catch (ArrayIndexOutOfBoundsException e) {
+			System.out.println("ERROR - No login ID specified. Connection aborted");
+			System.exit(0);
+		}
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new ClientGUI().setVisible(true);
-            }
-        });
+		try {
+			host = args[1];
+		} catch (ArrayIndexOutOfBoundsException e) {
+			host = "localhost";
+		}
+		
+		try {
+			port = Integer.parseInt(args[2]);
+		} catch (ArrayIndexOutOfBoundsException e) {
+			port = DEFAULT_PORT;
+		}
+		ClientGUI chat = new ClientGUI(host, port, loginid);
+		chat.accept(); // Wait for console data
     }
 }
