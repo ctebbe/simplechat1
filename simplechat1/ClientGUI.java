@@ -14,8 +14,10 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
 	private static final long serialVersionUID = 1L;
 	private javax.swing.JButton btnBlock;
     private javax.swing.JButton btnChannel;
+    private javax.swing.JButton btnPvtMsg;
     private javax.swing.JButton btnSend;
     private javax.swing.JButton btnStatus;
+    private javax.swing.JButton btnUnblock;
     private javax.swing.JComboBox<String> cbStatus;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
@@ -73,7 +75,7 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
 
     private void initComponents(String loginid) {
 
-        jPanel1 = new javax.swing.JPanel();
+    	jPanel1 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         txtDisplay = new javax.swing.JTextArea();
         jLabel1 = new javax.swing.JLabel();
@@ -84,8 +86,11 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
         btnBlock = new javax.swing.JButton();
         btnChannel = new javax.swing.JButton();
         btnStatus = new javax.swing.JButton();
+        btnPvtMsg = new javax.swing.JButton();
+        btnUnblock = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setResizable(false);
 
         jPanel1.setBorder(new javax.swing.border.MatteBorder(null));
 
@@ -100,7 +105,7 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
         cbStatus.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "AVAILABLE", "NOT AVAILABLE" }));
         cbStatus.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cbStatusActionPerformed(evt);
+            	cbStatusActionPerformed(evt);
             }
         });
 
@@ -120,7 +125,7 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
             }
         });
 
-        btnChannel.setText("Join Channel");
+        btnChannel.setText("Channel");
         btnChannel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnChannelActionPerformed(evt);
@@ -134,6 +139,20 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
             }
         });
 
+        btnPvtMsg.setText("Pvt Msg");
+        btnPvtMsg.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPvtMsgActionPerformed(evt);
+            }
+        });
+
+        btnUnblock.setText("Unblock");
+        btnUnblock.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUnblockActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -142,23 +161,30 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1)
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addGroup(jPanel1Layout.createSequentialGroup()
-                            .addComponent(jLabel1)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                            .addComponent(lblUserName, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(cbStatus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanel1Layout.createSequentialGroup()
-                            .addComponent(txtEditable, javax.swing.GroupLayout.PREFERRED_SIZE, 347, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(btnSend, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanel1Layout.createSequentialGroup()
-                            .addComponent(btnChannel)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(btnBlock)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(btnStatus))))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addGroup(jPanel1Layout.createSequentialGroup()
+                                    .addComponent(jLabel1)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                    .addComponent(lblUserName, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addComponent(cbStatus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGroup(jPanel1Layout.createSequentialGroup()
+                                    .addComponent(txtEditable, javax.swing.GroupLayout.PREFERRED_SIZE, 347, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addComponent(btnSend, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(btnChannel)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnBlock)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnUnblock)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnPvtMsg)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnStatus)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -179,8 +205,10 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnBlock)
                     .addComponent(btnChannel)
-                    .addComponent(btnStatus))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(btnStatus)
+                    .addComponent(btnPvtMsg)
+                    .addComponent(btnUnblock))
+                .addContainerGap(37, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -234,7 +262,15 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
 
     private void btnStatusActionPerformed(java.awt.event.ActionEvent evt) {                                          
     	send("#status " + txtEditable.getText());
+    }
+    
+    private void btnPvtMsgActionPerformed(java.awt.event.ActionEvent evt) {
+    	send("#private " + txtEditable.getText());
     }                                         
+
+    private void btnUnblockActionPerformed(java.awt.event.ActionEvent evt) {  
+    	send("#unblock " + txtEditable.getText());
+    } 
 
     /**
      * @param args the command line arguments
