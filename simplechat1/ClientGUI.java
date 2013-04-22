@@ -18,7 +18,8 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
     private javax.swing.JButton btnSend;
     private javax.swing.JButton btnStatus;
     private javax.swing.JButton btnUnblock;
-    private javax.swing.JComboBox<String> cbStatus;
+    private javax.swing.JButton btnDraw;
+    private javax.swing.JComboBox cbStatus;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
@@ -80,9 +81,10 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
         txtDisplay = new javax.swing.JTextArea();
         jLabel1 = new javax.swing.JLabel();
         lblUserName = new javax.swing.JLabel();
-        cbStatus = new javax.swing.JComboBox<String>();
+        cbStatus = new javax.swing.JComboBox();
         txtEditable = new javax.swing.JTextField();
         btnSend = new javax.swing.JButton();
+        btnDraw = new javax.swing.JButton();
         btnBlock = new javax.swing.JButton();
         btnChannel = new javax.swing.JButton();
         btnStatus = new javax.swing.JButton();
@@ -102,7 +104,7 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
 
         lblUserName.setText(loginid);
 
-        cbStatus.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "AVAILABLE", "NOT AVAILABLE" }));
+        cbStatus.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "AVAILABLE", "NOT AVAILABLE" }));
         cbStatus.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
             	cbStatusActionPerformed(evt);
@@ -118,6 +120,14 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
             }
         });
 
+        //TODO
+        btnDraw.setText("Draw");
+        btnDraw.addActionListener(new java.awt.event.ActionListener() {
+        	public void actionPerformed(java.awt.event.ActionEvent evt) {
+        		btnDrawActionPerformed(evt);
+        	}
+        });
+     
         btnBlock.setText("Block");
         btnBlock.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -175,6 +185,8 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
                                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                     .addComponent(btnSend, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)))
                             .addGroup(jPanel1Layout.createSequentialGroup()
+                            	.addComponent(btnDraw)
+                            	.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(btnChannel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(btnBlock)
@@ -204,6 +216,7 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnBlock)
+                    .addComponent(btnDraw)
                     .addComponent(btnChannel)
                     .addComponent(btnStatus)
                     .addComponent(btnPvtMsg)
@@ -240,6 +253,7 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
 		txtEditable.setText("");
 	}
 
+
     private void btnSendActionPerformed(java.awt.event.ActionEvent evt) {                                        
         send(txtEditable.getText());
     }                                       
@@ -252,6 +266,10 @@ public class ClientGUI extends javax.swing.JFrame implements ChatIF {
     	}
     }                                         
 
+	private void btnDrawActionPerformed(java.awt.event.ActionEvent evt){
+		client.openDrawpad();
+	}
+    
     private void btnChannelActionPerformed(java.awt.event.ActionEvent evt) {                                           
     	send("#channel " + txtEditable.getText());
     }                                          

@@ -12,6 +12,8 @@ import java.util.Observer;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import drawpad.OpenDrawPad;
+
 
 /**
  * This class overrides some of the methods defined in the abstract
@@ -339,7 +341,11 @@ public class ChatClient implements Observer
 		return quitOnClose;
 	}
 
-
+	public void openDrawpad(){
+	    ClientDrawPad pad = new ClientDrawPad();
+	    new OpenDrawPad(pad, pad);
+	}
+	
 	public void update(Observable o, Object msg) {
 		clientUI.display(msg.toString());
 	}
