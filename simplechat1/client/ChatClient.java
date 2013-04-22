@@ -342,7 +342,7 @@ public class ChatClient implements Observer
 	}
 
 	public void openDrawpad(){
-	    ClientDrawPad pad = new ClientDrawPad();
+	    ClientDrawPad pad = new ClientDrawPad(obsClient);
 	    new OpenDrawPad(pad, pad);
 	}
 	

@@ -1,6 +1,10 @@
 package client;
 import drawpad.OpenDrawPad;
+
+import java.io.IOException;
 import java.util.*;
+
+import ocsf.client.ObservableClient;
 
 /**
  * This class is used to start the DrawPad application without any client or
@@ -24,8 +28,20 @@ public class ClientDrawPad extends Observable implements Observer
    * @param obj The message sent to the observers.
    */
 	
+	private ObservableClient client; 
+	
+ public ClientDrawPad(ObservableClient observableClient)	{
+	 client = observableClient;
+ }
+	
   public void update(Observable obs, Object obj)
   {
+	 try {
+		client.sendToServer(obj);
+	} catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
     if (!(obj instanceof String))
       return;
     
@@ -44,7 +60,7 @@ public class ClientDrawPad extends Observable implements Observer
    * same instance of this class as both its parameters.  Execution of this method
    * must be terminated manually.
    */
-  public static void main(String[] args)
+ /*public static void main(String[] args)
   {
     System.out.println("To stop execution of this application, you must");
     System.out.println("terminate it manually.  There is no code to stop");
@@ -52,5 +68,5 @@ public class ClientDrawPad extends Observable implements Observer
     
     ClientDrawPad start = new ClientDrawPad();
     new OpenDrawPad(start, start);
-  }
+  }*/
 } 
