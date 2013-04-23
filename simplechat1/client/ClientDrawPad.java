@@ -17,56 +17,37 @@ import ocsf.client.ObservableClient;
  */
 public class ClientDrawPad extends Observable implements Observer 
 {
-  /**
-   * The update method is used to send messages back to the DrawPad in order for
-   * it to actually draw the design the mouse motion created.  This is done by
-   * notifying the DrawPad, which observes an instance of this class.  It is 
-   * called when the DrawPad notifies its observer, which is an instance of this
-   * class.
-   *
-   * @param obs The Observable instance which sent the message. 
-   * @param obj The message sent to the observers.
-   */
-	
+
 	private ObservableClient client; 
-	
- public ClientDrawPad(ObservableClient observableClient)	{
-	 client = observableClient;
- }
-	
-  public void update(Observable obs, Object obj)
-  {
-	 try {
-		client.sendToServer(obj);
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
+
+	public ClientDrawPad(ObservableClient observableClient)	{
+		client = observableClient;
 	}
-    if (!(obj instanceof String))
-      return;
-    
-    String msg = (String)obj;
-    
-    if (msg.startsWith("#send"))
-    {
-      setChanged();
-      notifyObservers(msg.substring(6));
-    }
-  }
-  
-  /**
-   * This method is responsible for the creation of the instances of this class
-   * and of DrawPad.  It calls the Constructor of the OpenDrawPad class with the
-   * same instance of this class as both its parameters.  Execution of this method
-   * must be terminated manually.
-   */
- /*public static void main(String[] args)
-  {
-    System.out.println("To stop execution of this application, you must");
-    System.out.println("terminate it manually.  There is no code to stop");
-    System.out.println("execution currently implemented.");
-    
-    ClientDrawPad start = new ClientDrawPad();
-    new OpenDrawPad(start, start);
-  }*/
+
+	public void update(Observable obs, Object obj)
+	{
+		if (!(obj instanceof String))
+			return;
+
+		String msg = (String)obj;
+
+		//If the message to draw needs to be sent to other clients
+		if (msg.startsWith("#send"))
+		{	  
+			try {
+				client.sendToServer(obj);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			setChanged();
+			notifyObservers(msg.substring(6));
+		}
+
+		//Else we need to display a message we have received on our drawpad
+		else{
+			setChanged();
+			notifyObservers(msg.substring(msg.indexOf("#linedraw")));
+		}
+	}
 } 

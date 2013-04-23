@@ -278,6 +278,8 @@ public class EchoServer implements Observer
 				setClientForward(client, arg);
 			} else if(command.equals("#private")) {
 				sendPrivateMessage(client, arg, arg2);
+			} else if(command.equals("#send"));{
+				sendDrawCommand(client, arg);
 			}
 			if((Integer) client.getInfo("status") == IDLE) {
 				setClientStatus(client, ONLINE);
@@ -287,6 +289,10 @@ public class EchoServer implements Observer
 		}
 	}
 
+	private void sendDrawCommand(ConnectionToClient client, String arg) throws IOException{
+		sendToAllClients(client, arg);
+	}
+	
 	private void sendPrivateMessage(ConnectionToClient sender, String user, String msg) throws IOException {
 		
 		ConnectionToClient sendee = getClient(user);

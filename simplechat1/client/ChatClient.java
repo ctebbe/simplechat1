@@ -50,7 +50,7 @@ public class ChatClient implements Observer
 	private final static int IDLE = 1;
 	private final static int UNAVAIL = 2;
 	private final static int OFFLINE = 3;
-	
+	private ClientDrawPad drawPad = null;
 	private ObservableClient obsClient;
 
 	//Constructors ****************************************************
@@ -342,12 +342,27 @@ public class ChatClient implements Observer
 	}
 
 	public void openDrawpad(){
-	    ClientDrawPad pad = new ClientDrawPad(obsClient);
-	    new OpenDrawPad(pad, pad);
+	    drawPad = new ClientDrawPad(obsClient);
+	    new OpenDrawPad(drawPad, drawPad);
+	}
+	
+	private void updateDrawing(String message){
+		if (drawPad != null){
+			drawPad.update(obsClient, message);
+		}
 	}
 	
 	public void update(Observable o, Object msg) {
-		clientUI.display(msg.toString());
+		
+		String message = msg.toString();
+		
+		if(message.contains("#linedraw")){
+			updateDrawing(message);
+		}
+		
+		else{
+			clientUI.display(message);
+		}
 	}
 }
 //End of ChatClient class
